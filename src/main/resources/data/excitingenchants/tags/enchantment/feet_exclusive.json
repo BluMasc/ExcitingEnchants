@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:soul_speed",
+    "minecraft:depth_strider",
+    "minecraft:feather_falling",
+    "excitingenchants:buoyant",
+    "excitingenchants:cloud_step"
+  ]
+}

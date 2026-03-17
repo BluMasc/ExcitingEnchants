@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:multishot",
+    "minecraft:piercing",
+    "excitingenchants:echoing",
+    "excitingenchants:sharing",
+    "excitingenchants:galvanizing",
+    "excitingenchants:sanguine",
+    "excitingenchants:grape_shot"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:silk_touch",
+    "minecraft:fortune",
+    "excitingenchants:reverberating",
+    "excitingenchants:earthen_spike"
+  ]
+}

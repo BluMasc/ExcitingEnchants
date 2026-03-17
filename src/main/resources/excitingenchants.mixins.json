@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "net.blumasc.excitingenchants.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "CrossbowMixin",
+    "ProjectileWeaponMixin",
+    "AbstractArrowMixin",
+    "TridentItemMixin",
+    "FishingHookMixin",
+    "ItemEntityMixin",
+    "ArrowMixin",
+    "BlockMixin"
+  ],
+  "client": [
+  ],
+  "server": []
+}

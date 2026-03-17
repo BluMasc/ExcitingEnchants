@@ -1,0 +1,20 @@
+{
+  "grape_shot":{
+    "subtitle": "sound.excitingenchants.grape_shot",
+    "sounds": [
+      "excitingenchants:grape_shot"
+    ]
+  },
+  "rope":{
+    "subtitle": "sound.excitingenchants.rope",
+    "sounds": [
+      "excitingenchants:rope"
+    ]
+  },
+  "rumble":{
+    "subtitle": "sound.excitingenchants.rumble",
+    "sounds": [
+      "excitingenchants:rumble"
+    ]
+  }
+}
