@@ -8,7 +8,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-// Packet record
 public record InventoryOpenPayload(boolean open) implements CustomPacketPayload {
     public static final Type<InventoryOpenPayload> TYPE =
         new Type<>(ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, "inventory_open"));

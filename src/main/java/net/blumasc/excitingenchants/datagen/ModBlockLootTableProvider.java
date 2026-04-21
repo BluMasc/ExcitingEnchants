@@ -35,6 +35,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.GOLDEN_PLANKS.get());
         dropSelf(ModBlocks.GOLDEN_PLANK_STAIRS.get());
         dropSelf(ModBlocks.GOLDEN_FENCE.get());
+        dropSelf(ModBlocks.CURSED_OBSIDIAN.get());
     }
 
     @Override
@@ -53,7 +54,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 ModBlocks.GOLDEN_GRASS.get(),
                 ModBlocks.GOLDEN_BLOCK.get(),
                 ModBlocks.GOLDEN_BRICKS.get(),
-                ModBlocks.GOLDEN_BRICK_WALL.get()
+                ModBlocks.GOLDEN_BRICK_WALL.get(),
+                ModBlocks.CURSED_OBSIDIAN.get()
         );
 
     }

@@ -24,6 +24,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.GOLDEN_BLOCK);
         blockWithItem(ModBlocks.GOLDEN_PLANKS);
         blockWithItem(ModBlocks.GOLDEN_BRICKS);
+        blockWithItem(ModBlocks.CURSED_OBSIDIAN);
         stairsBlock(ModBlocks.GOLDEN_BRICK_STAIRS.get(), blockTexture(ModBlocks.GOLDEN_BRICKS.get()));
         blockItem(ModBlocks.GOLDEN_BRICK_STAIRS);
         stairsBlock(ModBlocks.GOLDEN_PLANK_STAIRS.get(), blockTexture(ModBlocks.GOLDEN_PLANKS.get()));

@@ -16,5 +16,32 @@
     "sounds": [
       "excitingenchants:rumble"
     ]
+  },
+  "cursing":{
+    "subtitle": "sound.excitingenchants.cursing",
+    "sounds": [
+      "excitingenchants:cursing"
+    ]
+  },
+  "curse_cleaning":{
+    "subtitle": "sound.excitingenchants.curse_cleaning",
+    "sounds": [
+      "excitingenchants:curse_cleaning"
+    ]
+  },
+  "dart":{
+    "subtitle": "sound.excitingenchants.dart",
+    "sounds": [
+      "excitingenchants:dart"
+    ]
+  },
+  "balloon_pop": {
+    "sounds": [
+      "entity/itemframe/remove_item1",
+      "entity/itemframe/remove_item2",
+      "entity/itemframe/remove_item3",
+      "entity/itemframe/remove_item4"
+    ],
+    "subtitle": "sound.excitingenchants.balloon_pop"
   }
 }

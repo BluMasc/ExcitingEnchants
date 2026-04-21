@@ -42,7 +42,6 @@ public class ExcitingEnchantsMod {
         ModEnchantmentEffects.register(modEventBus);
         modEventBus.addListener(ModNetworking::register);
         ModHolderSetTypes.register(modEventBus);
-        System.out.println("Registering client extensions");
         ModParticles.PARTICLE_TYPES.register(modEventBus);
         ModLootModifiers.register(modEventBus);
 

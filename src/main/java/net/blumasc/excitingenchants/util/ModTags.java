@@ -16,6 +16,9 @@ public class ModTags {
         public static final TagKey<Item> ENCHANTABLE_DROP_EDITOR = createTag("enchantable_drop_editor");
         public static final TagKey<Item> ENCHANTABLE_SHOOTING = createTag("enchantable_shooting");
         public static final TagKey<Item> GHOUL_EATABLE = createTag("ghoul_eatable");
+        public static final TagKey<Item> GRAPESHOT_AMMUNITION = createTag("grapeshot_ammunition");
+        public static final TagKey<Item> NATURALLY_CURSED = createTag("naturally_cursed");
+        public static final TagKey<Item> HEAD_FEET = createTag("head_feet");
 
         private static TagKey<Item> createTag(String name){
             return ItemTags.create(ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, name));
@@ -24,6 +27,7 @@ public class ModTags {
     public static class Blocks{
         public static final TagKey<Block> REDSTONE_TARGET = createTag("redstone_target");
         public static final TagKey<Block> SMALL_PLANTS = createTag("small_plants");
+        public static final TagKey<Block> NEWTON_BLOCKS = createTag("newton_blocks");
         private static TagKey<Block> createTag(String name){
             return BlockTags.create(ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, name));
         }

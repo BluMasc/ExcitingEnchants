@@ -19,6 +19,7 @@ import net.blumasc.excitingenchants.item.ModItems;
 import net.blumasc.excitingenchants.network.InventoryOpenPayload;
 import net.blumasc.excitingenchants.network.JumpInputPacket;
 import net.blumasc.excitingenchants.shader.OilSlickRenderer;
+import net.blumasc.excitingenchants.util.ModTags;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -350,7 +351,7 @@ public class ClientEventHandler {
             ClientSoulData.SoulOrbit soul = souls.get(i);
 
             float baseAngle = (float)(i * (2 * Math.PI / souls.size()));
-            float angle = baseAngle + (ageInTicks * 0.05f);
+            float angle = baseAngle - (ageInTicks * 0.05f);
             float radius = 0.8f;
 
             float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(true);
@@ -427,7 +428,7 @@ public class ClientEventHandler {
             guiGraphics.blit(overlay, itemX, itemY, 0, 0, 16, 16, 16, 16);
             guiGraphics.pose().popPose();
 
-            return false; // return true if you want to cancel the durability bar rendering
+            return false;
         });
     }
 
@@ -438,7 +439,7 @@ public class ClientEventHandler {
             return ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, "textures/item/overlay/lightning_rod.png");
         if (projectile.is(ModItems.BLOOD_ORB.get()))
             return ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, "textures/item/overlay/blood_shard.png");
-        if (projectile.is(ItemTags.STONE_TOOL_MATERIALS))
+        if (projectile.is(ModTags.Items.GRAPESHOT_AMMUNITION))
             return ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, "textures/item/overlay/pebbles.png");
         return null;
     }
@@ -540,9 +541,7 @@ public class ClientEventHandler {
     }
     @SubscribeEvent
     public static void onScreenOpen(net.neoforged.neoforge.client.event.ScreenEvent.Opening event) {
-        System.out.println(event.getScreen());
         if (event.getScreen() instanceof AbstractContainerScreen) {
-            System.out.println("Send Packet Open");
             PacketDistributor.sendToServer(new InventoryOpenPayload(true));
         }
     }
@@ -550,7 +549,6 @@ public class ClientEventHandler {
     @SubscribeEvent
     public static void onScreenClose(net.neoforged.neoforge.client.event.ScreenEvent.Closing event) {
         if (event.getScreen() instanceof AbstractContainerScreen) {
-            System.out.println("Send Packet Closed");
             PacketDistributor.sendToServer(new InventoryOpenPayload(false));
         }
     }

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "excitingenchants:collecting_pockets"
+    "excitingenchants:collecting_pockets",
+    "excitingenchants:ender_pockets"
   ]
 }

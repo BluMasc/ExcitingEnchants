@@ -63,6 +63,9 @@ public class ModBlocks {
     public static final DeferredBlock<TallGrassBlock> GOLDEN_GRASS = registerBlock("golden_grass",
             () -> new TallGrassBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS).sound(SoundType.METAL).mapColor(MapColor.COLOR_YELLOW)));
 
+    public static final DeferredBlock<Block> CURSED_OBSIDIAN = registerBlock("cursed_obsidian",
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN)));
+
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block){
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);
         registerBlockItem(name, toReturn);

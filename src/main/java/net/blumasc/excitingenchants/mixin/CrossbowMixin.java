@@ -6,6 +6,7 @@ import net.blumasc.excitingenchants.entity.custom.GrapeShotProjectile;
 import net.blumasc.excitingenchants.entity.custom.LightningRodArrowEntity;
 import net.blumasc.excitingenchants.entity.custom.WardenBeamProjectile;
 import net.blumasc.excitingenchants.item.ModItems;
+import net.blumasc.excitingenchants.util.ModTags;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -49,7 +50,7 @@ public class CrossbowMixin {
             int enchantLevel = weapon.getEnchantmentLevel(galvanizingHolder);
             cir.setReturnValue(new LightningRodArrowEntity(level, shooter, 1+enchantLevel, weapon));
         }
-        if (ammo.is(ItemTags.STONE_TOOL_MATERIALS)) {
+        if (ammo.is(ModTags.Items.GRAPESHOT_AMMUNITION)) {
             Holder<Enchantment> galvanizingHolder = shooter.level().registryAccess()
                     .registryOrThrow(Registries.ENCHANTMENT)
                     .getHolderOrThrow(ModEnchantments.GRAPE_SHOT);

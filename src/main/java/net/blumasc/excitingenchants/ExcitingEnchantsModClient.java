@@ -10,6 +10,7 @@ import net.blumasc.excitingenchants.entity.ModEntities;
 import net.blumasc.excitingenchants.entity.client.*;
 import net.blumasc.excitingenchants.entity.client.balloon.BalloonRenderer;
 import net.blumasc.excitingenchants.entity.client.bident.BidentRenderer;
+import net.blumasc.excitingenchants.entity.client.echoghost.EchoGhostRenderer;
 import net.blumasc.excitingenchants.item.ModItems;
 import net.blumasc.excitingenchants.particle.MagneticItemParticle;
 import net.blumasc.excitingenchants.particle.ModParticles;
@@ -57,6 +58,7 @@ public class ExcitingEnchantsModClient {
         EntityRenderers.register(ModEntities.BIDENT.get(), BidentRenderer::new);
         EntityRenderers.register(ModEntities.NERF_ARROW.get(), NerfArrowRenderer::new);
         EntityRenderers.register(ModEntities.REDSTONE_ARC.get(), RedstoneArcRenderer::new);
+        EntityRenderers.register(ModEntities.ECHO_GHOST.get(), EchoGhostRenderer::new);
 
         ItemColors itemColors = Minecraft.getInstance().getItemColors();
 

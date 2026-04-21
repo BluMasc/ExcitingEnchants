@@ -1,4 +1,3 @@
-// net/blumasc/excitingenchants/network/JumpInputPacket.java
 package net.blumasc.excitingenchants.network;
 
 import net.blumasc.excitingenchants.ExcitingEnchantsMod;

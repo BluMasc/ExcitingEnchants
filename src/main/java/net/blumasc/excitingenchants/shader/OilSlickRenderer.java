@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
-// PostProcessor manager
 public class OilSlickRenderer {
     private static PostChain chain = null;
     private static float time = 0f;
@@ -19,11 +18,9 @@ public class OilSlickRenderer {
 
     static {
         try {
-            // "passes" is the obfuscated/mapped field name — try both
             try {
                 passesField = PostChain.class.getDeclaredField("passes");
             } catch (NoSuchFieldException e) {
-                // try Mojang mapped name if above fails
                 passesField = PostChain.class.getDeclaredField("f_110020_");
             }
             passesField.setAccessible(true);
@@ -48,7 +45,6 @@ public class OilSlickRenderer {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static void apply(float partialTick) {
         if (chain == null) return;
         Minecraft mc = Minecraft.getInstance();

@@ -1,6 +1,8 @@
 package net.blumasc.excitingenchants.entity.custom;
 
 import net.blumasc.excitingenchants.entity.ModEntities;
+import net.blumasc.excitingenchants.sound.ModSounds;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -23,7 +25,7 @@ public class NerfArrow extends AbstractArrow {
 
     @Override
     public double getBaseDamage() {
-        return 0.0;
+        return 0.01;
     }
 
     public ItemStack getWeaponItem() {
@@ -32,12 +34,17 @@ public class NerfArrow extends AbstractArrow {
 
     @Override
     protected ItemStack getDefaultPickupItem() {
-        return null;
+        return ItemStack.EMPTY;
     }
     @Override
     protected void onHitEntity(EntityHitResult result) {
         Entity target = result.getEntity();
         target.invulnerableTime = 0;
-        target.hurt(this.damageSources().arrow(this, getOwner()), 0.0f);
+        target.hurt(this.damageSources().arrow(this, getOwner()), 0.01f);
+    }
+
+    @Override
+    protected SoundEvent getDefaultHitGroundSoundEvent() {
+        return ModSounds.DART.get();
     }
 }

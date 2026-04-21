@@ -16,6 +16,10 @@ public class ModSounds {
     public static final Supplier<SoundEvent> ROPE = registerSoundEvent("rope");
     public static final Supplier<SoundEvent> GRAPE_SHOT = registerSoundEvent("grape_shot");
     public static final Supplier<SoundEvent> RUMBLE = registerSoundEvent("rumble");
+    public static final Supplier<SoundEvent> CURSING = registerSoundEvent("cursing");
+    public static final Supplier<SoundEvent> CURSE_CLEANING = registerSoundEvent("curse_cleaning");
+    public static final Supplier<SoundEvent> DART = registerSoundEvent("dart");
+    public static final Supplier<SoundEvent> BALLOON_POP = registerSoundEvent("balloon_pop");
 
     private static Supplier<SoundEvent> registerSoundEvent(String name){
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, name);

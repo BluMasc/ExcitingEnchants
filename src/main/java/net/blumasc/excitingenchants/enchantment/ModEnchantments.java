@@ -11,9 +11,12 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.LevelBasedValue;
@@ -23,6 +26,8 @@ import net.neoforged.neoforge.common.Tags;
 public class ModEnchantments {
 
     public static final ResourceKey<Enchantment> SPLATTER = makeEnchant("splatter");
+
+    public static final ResourceKey<Enchantment> TIME_REMNANT = makeEnchant("time_remnant");
 
     public static final ResourceKey<Enchantment> HUNGRY = makeEnchant( "hungry");
 
@@ -37,6 +42,8 @@ public class ModEnchantments {
     public static final ResourceKey<Enchantment> DASH = makeEnchant( "dash");
 
     public static final ResourceKey<Enchantment> COLLECTING_POCKETS = makeEnchant( "collecting_pockets");
+
+    public static final ResourceKey<Enchantment> ENDER_POCKETS = makeEnchant( "ender_pockets");
 
     public static final ResourceKey<Enchantment> BUOYANT = makeEnchant("buoyant");
 
@@ -132,6 +139,8 @@ public class ModEnchantments {
 
     public static final ResourceKey<Enchantment> RUBBER_BAND = makeEnchant("rubber_band");
 
+    public static final ResourceKey<Enchantment> NEWTON = makeEnchant("newton");
+
     public static ResourceKey<Enchantment> makeEnchant(String name){
         return ResourceKey.create(Registries.ENCHANTMENT,
                 ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, name));
@@ -142,10 +151,21 @@ public class ModEnchantments {
         var items = context.lookup(Registries.ITEM);
 
         register(context, SPLATTER, Enchantment.enchantment(Enchantment.definition(
-                        items.getOrThrow(ItemTags.WEAPON_ENCHANTABLE),
+                        items.getOrThrow(ItemTags.SWORD_ENCHANTABLE),
                         items.getOrThrow(ItemTags.SWORD_ENCHANTABLE),
                         5,
                         5,
+                        Enchantment.dynamicCost(2, 2),
+                        Enchantment.dynamicCost(25, 7),
+                        2,
+                        EquipmentSlotGroup.HAND))
+                .exclusiveWith(enchantments.getOrThrow(ModTags.EnchantmentTypes.SWORD_MUTUAL_EXCLUSIVE)));
+
+        register(context, TIME_REMNANT, Enchantment.enchantment(Enchantment.definition(
+                        items.getOrThrow(ItemTags.SWORD_ENCHANTABLE),
+                        items.getOrThrow(ItemTags.SWORD_ENCHANTABLE),
+                        5,
+                        3,
                         Enchantment.dynamicCost(2, 2),
                         Enchantment.dynamicCost(25, 7),
                         2,
@@ -236,6 +256,17 @@ public class ModEnchantments {
                 .exclusiveWith(enchantments.getOrThrow(ModTags.EnchantmentTypes.LEG_MOVING)));
 
         register(context, COLLECTING_POCKETS, Enchantment.enchantment(Enchantment.definition(
+                        items.getOrThrow(ItemTags.LEG_ARMOR_ENCHANTABLE),
+                        items.getOrThrow(ItemTags.LEG_ARMOR_ENCHANTABLE),
+                        5,
+                        3,
+                        Enchantment.dynamicCost(7, 3),
+                        Enchantment.dynamicCost(25, 7),
+                        2,
+                        EquipmentSlotGroup.LEGS))
+                .exclusiveWith(enchantments.getOrThrow(ModTags.EnchantmentTypes.POCKETS)));
+
+        register(context, ENDER_POCKETS, Enchantment.enchantment(Enchantment.definition(
                         items.getOrThrow(ItemTags.LEG_ARMOR_ENCHANTABLE),
                         items.getOrThrow(ItemTags.LEG_ARMOR_ENCHANTABLE),
                         5,
@@ -757,11 +788,32 @@ public class ModEnchantments {
                 2,
                 EquipmentSlotGroup.HAND)));
 
+        register(context, NEWTON, Enchantment.enchantment(Enchantment.definition(
+                items.getOrThrow(ModTags.Items.HEAD_FEET),
+                items.getOrThrow(ModTags.Items.HEAD_FEET),
+                5,
+                1,
+                Enchantment.dynamicCost(7, 3),
+                Enchantment.dynamicCost(25, 7),
+                2,
+                EquipmentSlotGroup.ARMOR)));
+
     }
 
 
     private static Holder<Enchantment> register(BootstrapContext<Enchantment> registry, ResourceKey<Enchantment> key,
                                    Enchantment.Builder builder) {
         return registry.register(key, builder.build(key.location()));
+    }
+
+    public static int getEnderPocketsLevel(Player player) {
+        ItemStack held = player.getItemBySlot(EquipmentSlot.LEGS);
+        if (held.isEmpty()) return 0;
+
+        Holder<Enchantment> enderPockets = player.level().registryAccess()
+                .registryOrThrow(Registries.ENCHANTMENT)
+                .getHolderOrThrow(ModEnchantments.ENDER_POCKETS);
+
+        return Math.min(3,held.getEnchantmentLevel(enderPockets));
     }
 }

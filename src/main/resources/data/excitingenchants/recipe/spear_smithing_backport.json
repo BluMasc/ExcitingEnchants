@@ -1,0 +1,50 @@
+{
+  "type": "minecraft:smithing_transform",
+  "conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "spears"
+    }
+  ],
+  "template": {
+    "item": "minecraft:red_wool"
+  },
+  "base": {
+    "item": "excitingenchants:swordspear_blank"
+  },
+  "addition": {
+    "item": "minecraft:gold_ingot"
+  },
+  "result": {
+    "id": "excitingenchants:swordspear",
+    "components": {
+      "minimum_attack_charge":0.75,
+      "piercing_weapon":{
+        "sound":"item.spear.attack",
+        "hit_sound":"item.spear.hit",
+        "hitbox_margin":0.125
+      },
+      "attack_range":{
+        "min_reach":2,
+        "max_reach":4.5
+      },
+      "swing_animation":{
+        "duration":20,
+        "type":"stab"
+      },
+      "kinetic_weapon":{
+        "damage_multiplier":0.85,
+        "hit_sound":"item.spear.hit",
+        "forward_movement":0.0,
+        "delay_ticks":15,
+        "damage_conditions":{"max_duration_ticks":60},
+        "knockback_conditions":{"max_duration_ticks":40},
+        "dismount_conditions":{"max_duration_ticks":20}
+      },
+      "use_effects":{
+        "can_sprint":true,
+        "speed_multiplier":1.0
+      }
+    }
+  }
+}

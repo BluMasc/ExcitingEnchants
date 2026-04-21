@@ -85,8 +85,6 @@ public abstract class AbstractArrowMixin extends Projectile {
 
                 arrow.level().addFreshEntity(copy);
             }
-
-            // make original fall too
             arrow.setDeltaMovement(
                 (arrow.level().random.nextDouble() - 0.5) * 0.2,
                 -1.0,

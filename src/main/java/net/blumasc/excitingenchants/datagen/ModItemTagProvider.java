@@ -31,9 +31,28 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 .addTag(ItemTags.MINING_ENCHANTABLE)
                 .addTag(ItemTags.FIRE_ASPECT_ENCHANTABLE);
 
+        tag(ModTags.Items.HEAD_FEET)
+                .addTag(ItemTags.HEAD_ARMOR_ENCHANTABLE)
+                .addTag(ItemTags.FOOT_ARMOR_ENCHANTABLE);
+
         tag(ModTags.Items.ENCHANTABLE_SHOOTING)
                 .addTag(ItemTags.BOW_ENCHANTABLE)
                 .addTag(ItemTags.CROSSBOW_ENCHANTABLE);
+        tag(ModTags.Items.GRAPESHOT_AMMUNITION)
+                .addTag(ItemTags.STONE_TOOL_MATERIALS);
+        tag(ModTags.Items.NATURALLY_CURSED)
+                .add(ModItems.HOTDOG.get())
+                .add(ModItems.AUTHENTIC_MEAT.get())
+                .add(ModItems.COOKED_AUTHENTIC_MEAT.get())
+                .add(ModItems.BIDENT.get())
+                .add(ModItems.RAW_CARP.get())
+                .add(ModItems.RAW_RAINBOW_FISH.get())
+                .add(ModItems.RARE_FISH.get())
+                .add(ModItems.GOLDEN_MEAT.get())
+                .add(ModItems.GASSTATION_SUSHI.get())
+                .add(ModBlocks.GOLDEN_BLOCK.asItem())
+                .add(ModBlocks.GOLDEN_GRASS.asItem())
+                .add(Items.PUFFERFISH);
 
         tag(ItemTags.TRIDENT_ENCHANTABLE)
                 .add(ModItems.BIDENT.get());
@@ -72,7 +91,9 @@ public class ModItemTagProvider extends ItemTagsProvider {
 
         tag(ItemTags.FISHES)
                 .add(ModItems.RAW_CARP.asItem())
+                .add(ModItems.COOKED_CARP.get())
                 .add(ModItems.RAW_RAINBOW_FISH.asItem())
+                .add(ModItems.COOKED_RAINBOW_FISH.get())
                 .add(ModItems.RARE_FISH.asItem());
 
         tag(ItemTags.create(ResourceLocation.fromNamespaceAndPath("minecraft","spears")))

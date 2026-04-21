@@ -4,6 +4,7 @@ import net.blumasc.excitingenchants.ExcitingEnchantsMod;
 import net.blumasc.excitingenchants.block.ModBlocks;
 import net.blumasc.excitingenchants.item.custom.BidentItem;
 import net.blumasc.excitingenchants.item.custom.BloodOrbItem;
+import net.blumasc.excitingenchants.item.custom.CleansingSoapItem;
 import net.blumasc.excitingenchants.item.custom.GoldEatenItem;
 import net.blumasc.excitingenchants.state.PlayerEnchantmentStateHandler;
 import net.minecraft.ChatFormatting;
@@ -57,6 +58,9 @@ public class ModItems {
     public static final DeferredItem<Item> RARE_FISH = ITEMS.register("rare_fish",
             () -> new Item(new Item.Properties()));
 
+    public static final DeferredItem<CleansingSoapItem> CLEANSING_SOAP = ITEMS.register("cleansing_soap",
+            () -> new CleansingSoapItem(new Item.Properties().stacksTo(16)));
+
     public static final DeferredItem<Item> GOLDEN_MEAT = ITEMS.register("golden_meat",
             () -> new GoldEatenItem(new Item.Properties().food(ModFoodProperties.GOLDEN_MEAT)));
 
@@ -64,10 +68,10 @@ public class ModItems {
             () -> new GoldEatenItem(new Item.Properties().food(ModFoodProperties.COOKED_GOLDEN_MEAT)));
 
     public static final DeferredItem<Item> COOKED_AUTHENTIC_MEAT = ITEMS.register("cooked_real_authentic_meat",
-            () -> new Item(new Item.Properties().food(ModFoodProperties.SUSPICIOUS_MEAT)));
+            () -> new Item(new Item.Properties().food(ModFoodProperties.COOKED_SUSPICIOUS_MEAT)));
 
     public static final DeferredItem<Item> AUTHENTIC_MEAT = ITEMS.register("real_authentic_meat",
-            () -> new Item(new Item.Properties().food(ModFoodProperties.COOKED_SUSPICIOUS_MEAT)));
+            () -> new Item(new Item.Properties().food(ModFoodProperties.SUSPICIOUS_MEAT)));
 
     public static final DeferredItem<Item> HOTDOG = ITEMS.register("hot_dog",
             () -> new Item(new Item.Properties().food(ModFoodProperties.HOT_DOG)){

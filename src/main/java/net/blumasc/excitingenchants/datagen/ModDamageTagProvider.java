@@ -19,13 +19,16 @@ public class ModDamageTagProvider extends DamageTypeTagsProvider {
     @Override
     protected void addTags(HolderLookup.Provider provider) {
         tag(DamageTypeTags.BYPASSES_SHIELD)
-                .add(ModDamageTypes.SANGUINE_DAMAGE);
+                .add(ModDamageTypes.SANGUINE_DAMAGE)
+                .add(ModDamageTypes.SMOKE_DAMAGE);
         tag(DamageTypeTags.BYPASSES_ARMOR)
                 .add(ModDamageTypes.SANGUINE_DAMAGE);
         tag(DamageTypeTags.NO_KNOCKBACK)
-                .add(ModDamageTypes.SANGUINE_DAMAGE);
+                .add(ModDamageTypes.SANGUINE_DAMAGE)
+                .add(ModDamageTypes.SMOKE_DAMAGE);
         tag(DamageTypeTags.BYPASSES_COOLDOWN)
-                .add(ModDamageTypes.SANGUINE_DAMAGE);
+                .add(ModDamageTypes.SANGUINE_DAMAGE)
+                .add(ModDamageTypes.SMOKE_DAMAGE);
         tag(DamageTypeTags.BYPASSES_INVULNERABILITY)
                 .add(ModDamageTypes.SANGUINE_DAMAGE);
     }

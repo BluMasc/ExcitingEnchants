@@ -98,6 +98,7 @@ public abstract class ItemEntityMixin{
                         && stateToPlace.canSurvive(me.level(), pos)
                         && me.level().isUnobstructed(null, stateToPlace.getCollisionShape(me.level(), pos).move(pos.getX(), pos.getY(), pos.getZ()))) {
 
+                    serverLevel.setBlock(pos, stateToPlace, 3);
                     ItemStack stack = me.getItem();
                     stack.shrink(1);
                     if (stack.isEmpty()) {

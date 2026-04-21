@@ -32,6 +32,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.AUTHENTIC_MEAT.get());
         basicItem(ModItems.COOKED_AUTHENTIC_MEAT.get());
         basicItem(ModItems.RARE_FISH.get());
+        basicItem(ModItems.CLEANSING_SOAP.get());
         handheldItem(ModItems.BIDENT.get());
         handheldItem(ModItems.OVERGROWN_SPEAR.get());
         handheldItem(ModItems.RUSTED_SPEAR.get());

@@ -1,4 +1,3 @@
-// net/blumasc/excitingenchants/enchantments/handler/CloudStepHandler.java
 package net.blumasc.excitingenchants.network;
 
 import net.blumasc.excitingenchants.block.ModBlocks;

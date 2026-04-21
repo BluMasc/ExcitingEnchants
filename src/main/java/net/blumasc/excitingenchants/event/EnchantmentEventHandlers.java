@@ -18,11 +18,11 @@ import net.blumasc.excitingenchants.effect.ModEffects;
 import net.blumasc.excitingenchants.enchantment.ModEnchantments;
 import net.blumasc.excitingenchants.entity.ModEntities;
 import net.blumasc.excitingenchants.entity.custom.BalloonEntity;
+import net.blumasc.excitingenchants.entity.custom.EchoGhostEntity;
 import net.blumasc.excitingenchants.entity.custom.RedLightning;
 import net.blumasc.excitingenchants.item.ModItems;
 import net.blumasc.excitingenchants.mixin.AbstractArrowMixin;
-import net.blumasc.excitingenchants.network.DiviningDataSyncPacket;
-import net.blumasc.excitingenchants.network.SoulDataSyncPacket;
+import net.blumasc.excitingenchants.network.*;
 import net.blumasc.excitingenchants.particle.MagneticItemParticleOption;
 import net.blumasc.excitingenchants.sound.ModSounds;
 import net.blumasc.excitingenchants.state.PlayerEnchantmentState;
@@ -39,6 +39,10 @@ import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -49,6 +53,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.*;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -61,6 +66,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.*;
@@ -95,6 +101,7 @@ import net.neoforged.neoforge.event.entity.player.*;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -277,6 +284,7 @@ public class EnchantmentEventHandlers {
                     0.05
             );
         }
+        eatGhoulFoodCheck(player, foodStack);
         ItemStack result = foodStack.finishUsingItem(player.level(), player);
         foodStack.shrink(1);
         if (!result.isEmpty() && result != foodStack) {
@@ -321,6 +329,7 @@ public class EnchantmentEventHandlers {
         if (stack.isEmpty()) return false;
         FoodProperties food = stack.getFoodProperties(player);
         if (food == null) return false;
+        if (player.hasEffect(ModEffects.MEAT_CRAZED) && !stack.is(ItemTags.MEAT)) return false;
         return food.effects().isEmpty();
     }
 
@@ -1159,7 +1168,7 @@ public class EnchantmentEventHandlers {
                 ItemEntity newEntity = new ItemEntity(
                         e.level(),
                         dropEntity.getX(), dropEntity.getY(), dropEntity.getZ(),
-                        smelted.copy() // fresh copy
+                        smelted.copy()
                 );
                 newDrops.add(newEntity);
 
@@ -1686,7 +1695,7 @@ public class EnchantmentEventHandlers {
                 ItemStack lightningRodStack = ItemStack.EMPTY;
 
                 for (ItemStack stack : p.getInventory().items) {
-                    if (stack.is(ItemTags.STONE_TOOL_MATERIALS)) {
+                    if (stack.is(ModTags.Items.GRAPESHOT_AMMUNITION)) {
                         lightningRodStack = stack;
                         break;
                     }
@@ -2124,6 +2133,12 @@ public class EnchantmentEventHandlers {
     public static void onFoodEaten(LivingEntityUseItemEvent.Finish event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
+        ItemStack food = event.getItem();
+        eatGhoulFoodCheck(player, food);
+
+    }
+
+    private static void eatGhoulFoodCheck(Player player, ItemStack food){
         ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
 
         Holder<Enchantment> reaping = player.level().registryAccess()
@@ -2132,7 +2147,6 @@ public class EnchantmentEventHandlers {
 
         int enchLevel = helmet.getEnchantmentLevel(reaping);
 
-        ItemStack food = event.getItem();
         FoodProperties foodProps = food.getFoodProperties(player);
         if (foodProps == null) return;
         if(food.is(ModTags.Items.GHOUL_EATABLE) && enchLevel<=0){
@@ -2437,6 +2451,357 @@ public class EnchantmentEventHandlers {
 
         serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.PLAYERS, 0.5f, 2.0f);
+    }
+
+    @SubscribeEvent
+    public static void onEntityDeath(LivingDeathEvent event) {
+        if (event.getSource().getEntity() instanceof ServerPlayer player) {
+
+            if (isAnimal(event.getEntity())) {
+                PacketDistributor.sendToPlayer(player, new HimActionPacket(0));
+            } else if (isMonster(event.getEntity())) {
+                PacketDistributor.sendToPlayer(player, new HimActionPacket(1));
+            }
+
+            if (event.getEntity() instanceof ServerPlayer deadPlayer) {
+                PacketDistributor.sendToPlayer(deadPlayer, new HimActionPacket(2));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBlockBreak(BlockEvent.BreakEvent event){
+        Player p = event.getPlayer();
+        if(p instanceof ServerPlayer sp){
+            PacketDistributor.sendToPlayer(sp, new HimActionPacket(3));
+        }
+    }
+
+    private static boolean isAnimal(net.minecraft.world.entity.Entity entity) {
+        return entity instanceof net.minecraft.world.entity.animal.Animal
+                && !(entity instanceof net.minecraft.world.entity.monster.Enemy);
+    }
+
+    private static boolean isMonster(net.minecraft.world.entity.Entity entity) {
+        return entity instanceof net.minecraft.world.entity.monster.Monster;
+    }
+
+    private static final String KEY_POSITIONS = "EchoStrikePositions";
+
+    @SubscribeEvent
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        Player player = event.getEntity();
+        if (player.level().isClientSide) return;
+
+        ItemStack stack = event.getItemStack();
+        if (stack.isEmpty()) return;
+
+        Holder<Enchantment> rubberBandHolder = player.level().registryAccess()
+                .registryOrThrow(Registries.ENCHANTMENT)
+                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
+
+        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        if (echoLevel <= 0) return;
+
+        savePosition(stack, player, echoLevel);
+
+        int count = getPositionList(stack).size();
+    }
+    @SubscribeEvent
+    public static void onAttackEntity(AttackEntityEvent event) {
+        Player player = event.getEntity();
+        if (player.level().isClientSide) return;
+
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty()) return;
+
+        Holder<Enchantment> rubberBandHolder = player.level().registryAccess()
+                .registryOrThrow(Registries.ENCHANTMENT)
+                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
+
+        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        if (echoLevel <= 0) return;
+
+        spawnEchoGhosts(player, stack);
+    }
+    @SubscribeEvent
+    public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        Player player = event.getEntity();
+        if (player.level().isClientSide) return;
+
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty()) return;
+
+        Holder<Enchantment> rubberBandHolder = player.level().registryAccess()
+                .registryOrThrow(Registries.ENCHANTMENT)
+                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
+
+        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        if (echoLevel <= 0) return;
+
+        spawnEchoGhosts(player, stack);
+    }
+    @SubscribeEvent
+    public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty event) {
+        PacketDistributor.sendToServer(new LeftClickPayload());
+    }
+    public static void spawnEchoGhosts(Player player, ItemStack stack) {
+        ListTag positions = getPositionList(stack);
+        if (positions.isEmpty()) return;
+
+        ServerLevel serverLevel = (ServerLevel) player.level();
+        String currentDim = serverLevel.dimension().location().toString();
+
+        List<Integer> toRemove = new ArrayList<>();
+
+        for (int i = 0; i < positions.size(); i++) {
+            CompoundTag pos = positions.getCompound(i);
+
+            if (!pos.getString("Dim").equals(currentDim)) continue;
+
+            double px    = pos.getDouble("X");
+            double py    = pos.getDouble("Y");
+            double pz    = pos.getDouble("Z");
+            Vec3 look = new Vec3(
+                    pos.getDouble("LookX"),
+                    pos.getDouble("LookY"),
+                    pos.getDouble("LookZ")
+            );
+
+            float yaw = (float)(Math.atan2(-look.x, look.z) * (180F / Math.PI));
+            float pitch = (float)(Math.asin(-look.y) * (180F / Math.PI));
+            if (player.distanceToSqr(px, py, pz) > 128.0 * 128.0) continue;
+
+            EchoGhostEntity ghost = ModEntities.ECHO_GHOST.get().create(serverLevel);
+            if (ghost == null) continue;
+
+            ghost.moveTo(px, py, pz, yaw, pitch);
+            ghost.init(player.getUUID(), stack, yaw, pitch);
+            serverLevel.addFreshEntity(ghost);
+
+            toRemove.add(i);
+        }
+
+        for (int i = toRemove.size() - 1; i >= 0; i--) {
+            positions.remove((int) toRemove.get(i));
+        }
+        writePositionList(stack, positions);
+    }
+    @SubscribeEvent
+    public static void onLevelTick(LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
+        if (serverLevel.getGameTime() % 5 != 0) return;
+
+        String currentDim = serverLevel.dimension().location().toString();
+
+        for (ServerPlayer player : serverLevel.players()) {
+            ItemStack stack = player.getMainHandItem();
+            if (stack.isEmpty()) continue;
+
+            Holder<Enchantment> rubberBandHolder = serverLevel.registryAccess()
+                    .registryOrThrow(Registries.ENCHANTMENT)
+                    .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
+
+            int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+            if (echoLevel <= 0) continue;
+
+            ListTag positions = getPositionList(stack);
+            for (int i = 0; i < positions.size(); i++) {
+                CompoundTag pos = positions.getCompound(i);
+                if (!pos.getString("Dim").equals(currentDim)) continue;
+
+                double px = pos.getDouble("X");
+                double py = pos.getDouble("Y");
+                double pz = pos.getDouble("Z");
+
+                if (player.distanceToSqr(px, py, pz) > 124.0 * 124.0) continue;
+
+                serverLevel.sendParticles(ParticleTypes.SMOKE,
+                        px, py + 0.1, pz,
+                        2, 0.12, 0.0, 0.12, 0.015);
+                serverLevel.sendParticles(ParticleTypes.LARGE_SMOKE,
+                        px, py + 1.1, pz,
+                        1, 0.15, 0.25, 0.15, 0.008);
+            }
+        }
+    }
+
+    private static ListTag getPositionList(ItemStack stack) {
+        CompoundTag root = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        if (root.contains(KEY_POSITIONS, Tag.TAG_LIST)) {
+            return root.getList(KEY_POSITIONS, Tag.TAG_COMPOUND);
+        }
+        return new ListTag();
+    }
+
+    private static void writePositionList(ItemStack stack, ListTag list) {
+        CompoundTag root = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        root.put(KEY_POSITIONS, list);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private static void savePosition(ItemStack stack, Player player, int maxSlots) {
+        ListTag list = getPositionList(stack);
+        double px = player.getX();
+        double py = player.getY();
+        double pz = player.getZ();
+        String dim = player.level().dimension().location().toString();
+        Vec3 look = player.getLookAngle();
+
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag existing = list.getCompound(i);
+
+            if (!existing.getString("Dim").equals(dim)) continue;
+
+            double ex = existing.getDouble("X");
+            double ey = existing.getDouble("Y");
+            double ez = existing.getDouble("Z");
+
+            double distSqr = (px - ex) * (px - ex)
+                    + (py - ey) * (py - ey)
+                    + (pz - ez) * (pz - ez);
+
+            if (distSqr < 1) {
+                existing.putDouble("X", px);
+                existing.putDouble("Y", py);
+                existing.putDouble("Z", pz);
+                existing.putDouble("LookX", look.x);
+                existing.putDouble("LookY", look.y);
+                existing.putDouble("LookZ", look.z);
+                writePositionList(stack, list);
+                return;
+            }
+        }
+
+        while (list.size() >= maxSlots) {
+            list.remove(0);
+        }
+
+        CompoundTag pos = new CompoundTag();
+        pos.putDouble("X", px);
+        pos.putDouble("Y", py);
+        pos.putDouble("Z", pz);
+        pos.putDouble("LookX", look.x);
+        pos.putDouble("LookY", look.y);
+        pos.putDouble("LookZ", look.z);
+        pos.putString("Dim", dim);
+
+        list.add(pos);
+        writePositionList(stack, list);
+    }
+    @SubscribeEvent
+    public static void onItemTooltip(net.neoforged.neoforge.event.entity.player.ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        if (stack.isEmpty()) return;
+        if (event.getEntity() == null) return;
+
+        Holder<Enchantment> rubberBandHolder = event.getEntity().level().registryAccess()
+                .registryOrThrow(Registries.ENCHANTMENT)
+                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
+
+        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        if (echoLevel <= 0) return;
+
+        ListTag positions = getPositionList(stack);
+
+        if (positions.isEmpty()) {
+            event.getToolTip().add(
+                    Component.translatable("echostrike.tooltip.no_positions")
+                            .withStyle(net.minecraft.ChatFormatting.DARK_GRAY)
+            );
+            return;
+        }
+
+        event.getToolTip().add(
+                Component.translatable("echostrike.tooltip.header", positions.size(), echoLevel)
+                        .withStyle(net.minecraft.ChatFormatting.GRAY)
+        );
+
+        for (int i = 0; i < positions.size(); i++) {
+            CompoundTag pos = positions.getCompound(i);
+
+            int x   = (int) pos.getDouble("X");
+            int y   = (int) pos.getDouble("Y");
+            int z   = (int) pos.getDouble("Z");
+            String dim = pos.getString("Dim");
+
+            String dimShort = dim.contains(":")
+                    ? dim.substring(dim.indexOf(':') + 1)
+                    : dim;
+            dimShort = dimShort.substring(0, 1).toUpperCase() + dimShort.substring(1);
+
+            event.getToolTip().add(
+                    Component.translatable("echostrike.tooltip.position",
+                                    i + 1, x, y, z, dimShort)
+                            .withStyle(net.minecraft.ChatFormatting.DARK_AQUA)
+            );
+        }
+    }
+
+    private static final int TICK_INTERVAL = 5;
+    private static final int HELMET_REACH  = 10;
+
+    @SubscribeEvent
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (player.isSpectator() || !player.isAlive()) return;
+        if (player.level().getGameTime() % TICK_INTERVAL != 0) return;
+        if (!(player.level() instanceof ServerLevel level)) return;
+
+        var reg = level.registryAccess();
+
+        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
+        ItemStack boots  = player.getItemBySlot(EquipmentSlot.FEET);
+
+        Holder<Enchantment> rubberBandHolder = event.getEntity().level().registryAccess()
+                .registryOrThrow(Registries.ENCHANTMENT)
+                .getHolderOrThrow(ModEnchantments.NEWTON);
+
+        int helmetLevel = helmet.getEnchantmentLevel(rubberBandHolder);
+        int bootsLevel = boots.getEnchantmentLevel(rubberBandHolder);
+
+        if (helmetLevel>0) tickHelmet(player, level);
+        if (bootsLevel>0) tickBoots(player, level);
+    }
+
+    private static void tickHelmet(ServerPlayer player, ServerLevel level) {
+        if(player.getRandom().nextFloat()<0.8) return;
+        int headY = (int) Math.ceil(player.getY() + player.getEyeHeight());
+        int x     = player.getBlockX();
+        int z     = player.getBlockZ();
+
+        for (int dy = 0; dy <= HELMET_REACH; dy++) {
+            BlockPos pos     = new BlockPos(x, headY + dy, z);
+            BlockState state = level.getBlockState(pos);
+
+            if (state.isAir()) continue;
+
+            if (state.is(ModTags.Blocks.NEWTON_BLOCKS)) {
+                makeBlockFall(level, pos, state);
+            }
+            break;
+
+        }
+    }
+
+    private static void tickBoots(ServerPlayer player, ServerLevel level) {
+        if (!player.onGround()) return;
+        if(player.getRandom().nextFloat()<0.8) return;
+
+        BlockPos underFeet   = player.blockPosition().below();
+        BlockState underState = level.getBlockState(underFeet);
+
+        if (!underState.is(ModTags.Blocks.NEWTON_BLOCKS)) return;
+
+        if (!level.getBlockState(underFeet.below()).isAir()) return;
+
+        makeBlockFall(level, underFeet, underState);
+    }
+
+    private static void makeBlockFall(ServerLevel level, BlockPos pos, BlockState state) {
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+        level.playSound(null, pos, BaseModSounds.EARTH_RUMBLE.get(), SoundSource.PLAYERS);
+        FallingBlockEntity falling = FallingBlockEntity.fall(level, pos, state);
     }
 
 }

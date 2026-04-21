@@ -17,6 +17,10 @@ public class ModDamageTypes {
 
     public static final ResourceKey<DamageType> SANGUINE_DAMAGE =
             ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, "enchantment_bleed"));
+
+    public static final ResourceKey<DamageType> SMOKE_DAMAGE =
+            ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, "enchantment_smoke"));
+
     public static DamageSource grapeShotDamage(Level level, @Nullable Entity cause) {
         return new DamageSource(
                 level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(GRAPE_SHOT_DAMAGE), cause);
@@ -25,5 +29,10 @@ public class ModDamageTypes {
     public static DamageSource sanguineDamage(Level level) {
         return new DamageSource(
                 level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(SANGUINE_DAMAGE));
+    }
+
+    public static DamageSource smokeDamage(Level level) {
+        return new DamageSource(
+                level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(SMOKE_DAMAGE));
     }
 }

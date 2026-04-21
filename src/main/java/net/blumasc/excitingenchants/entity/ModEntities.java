@@ -74,6 +74,16 @@ public class ModEntities {
                             .updateInterval(1)
                             .build("redstone_arc"));
 
+    public static final Supplier<EntityType<EchoGhostEntity>> ECHO_GHOST =
+            ENTITY_TYPES.register("echo_ghost", () ->
+                    EntityType.Builder.of(EchoGhostEntity::new, MobCategory.MISC)
+                            .sized(0.6F, 1.8F)
+                            .clientTrackingRange(160)
+                            .noSave()
+                            .noSummon()
+                            .build("echo_ghost")
+            );
+
     public static void register(IEventBus eventBus){
         ENTITY_TYPES.register(eventBus);
     }

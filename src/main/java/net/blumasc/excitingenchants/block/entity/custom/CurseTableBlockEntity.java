@@ -5,6 +5,7 @@ import net.blumasc.blubasics.sound.BaseModSounds;
 import net.blumasc.excitingenchants.block.entity.ModBlockEntities;
 import net.blumasc.excitingenchants.enchantment.ModEnchantments;
 import net.blumasc.excitingenchants.item.ModItems;
+import net.blumasc.excitingenchants.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -243,7 +244,7 @@ public class CurseTableBlockEntity extends BlockEntity {
                 if (hasCraftingFinished()) {
                     finishCraft(level, blockPos);
                     resetProgress();
-                    level.playSound(null, blockPos, BaseModSounds.ELECTRIC.get(), SoundSource.BLOCKS, 1f, 1f);
+                    level.playSound(null, blockPos, ModSounds.CURSING.get(), SoundSource.BLOCKS, 1f, 1f);
                     succesfullCraft = true;
                     setChanged();
                     level.sendBlockUpdated(blockPos, blockState, blockState, 3);

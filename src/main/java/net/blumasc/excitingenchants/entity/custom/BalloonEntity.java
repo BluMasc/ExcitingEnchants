@@ -1,5 +1,6 @@
 package net.blumasc.excitingenchants.entity.custom;
 
+import net.blumasc.excitingenchants.sound.ModSounds;
 import net.blumasc.excitingenchants.state.PlayerEnchantmentState;
 import net.blumasc.excitingenchants.state.PlayerEnchantmentStateHandler;
 import net.minecraft.core.BlockPos;
@@ -173,17 +174,17 @@ public class BalloonEntity extends LivingEntity {
             ((ServerLevel) this.level()).sendParticles(
                     new DustParticleOptions(new Vector3f(r, g, b), 1.5f),
                     this.getX(), this.getY(), this.getZ(),
-                    20,    // count
-                    0.3, 0.3, 0.3, // spread
-                    0.1    // speed
+                    20,
+                    0.3, 0.3, 0.3,
+                    0.1
             );
 
             this.level().playSound(
                     null,
                     this.blockPosition(),
-                    SoundEvents.ITEM_FRAME_REMOVE_ITEM, // closest vanilla "pop"
+                    ModSounds.BALLOON_POP.get(),
                     SoundSource.NEUTRAL,
-                    1.0f, 1.8f  // high pitch = poppy sound
+                    1.0f, 1.8f
             );
 
             if(getEntityFromUUID() instanceof LivingEntity e){

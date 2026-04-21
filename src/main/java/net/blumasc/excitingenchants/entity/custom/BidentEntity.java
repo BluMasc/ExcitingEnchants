@@ -15,7 +15,6 @@ public class BidentEntity extends ThrownTrident {
 
     public BidentEntity(Level level, LivingEntity shooter, ItemStack pickupItemStack) {
         super(level, shooter, pickupItemStack);
-        // The entity type gets set to TRIDENT by super — we need to fix this
     }
 
     public BidentEntity(Level level, double x, double y, double z, ItemStack pickupItemStack) {

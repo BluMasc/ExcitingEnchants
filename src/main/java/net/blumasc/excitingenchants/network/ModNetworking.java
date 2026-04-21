@@ -28,6 +28,11 @@ public class ModNetworking {
                 HorrorSyncPacket.STREAM_CODEC,
                 HorrorSyncPacket::handle
         );
+        event.registrar(ExcitingEnchantsMod.MODID).playToClient(
+                HimActionPacket.TYPE,
+                HimActionPacket.STREAM_CODEC,
+                HimActionPacket::handle
+        );
         event.registrar(ExcitingEnchantsMod.MODID).playToServer(
                 JumpInputPacket.TYPE,
                 JumpInputPacket.STREAM_CODEC,
@@ -41,6 +46,12 @@ public class ModNetworking {
         );
 
         event.registrar(ExcitingEnchantsMod.MODID).playToServer(
+                LeftClickPayload.TYPE,
+                LeftClickPayload.STREAM_CODEC,
+                LeftClickPayload::handle
+        );
+
+        event.registrar(ExcitingEnchantsMod.MODID).playToServer(
                 HorrorRequestPacket.TYPE,
                 HorrorRequestPacket.STREAM_CODEC,
                 HorrorRequestPacket::handle
@@ -51,5 +62,13 @@ public class ModNetworking {
                 HorrorSavePacket.STREAM_CODEC,
                 HorrorSavePacket::handle
         );
+        event.registrar(ExcitingEnchantsMod.MODID).playToClient(
+                EnderSyncPacket.TYPE,
+                EnderSyncPacket.STREAM_CODEC,
+                EnderSyncPacket::handle);
+        event.registrar(ExcitingEnchantsMod.MODID).playToServer(
+                EnderActionPacket.TYPE,
+                EnderActionPacket.STREAM_CODEC,
+                EnderActionPacket::handle);
     }
 }

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.blumasc.excitingenchants.ExcitingEnchantsMod;
 import net.blumasc.excitingenchants.item.ModItems;
+import net.blumasc.excitingenchants.util.ModTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -35,7 +36,6 @@ public class CrossbowAmmoRenderer extends BlockEntityWithoutLevelRenderer {
     public CrossbowAmmoRenderer() {
         super(Minecraft.getInstance().getBlockEntityRenderDispatcher(),
               Minecraft.getInstance().getEntityModels());
-        System.out.println("CrossbowAmmoRenderer constructed");
     }
 
     @Override
@@ -43,11 +43,9 @@ public class CrossbowAmmoRenderer extends BlockEntityWithoutLevelRenderer {
                              PoseStack poseStack, MultiBufferSource bufferSource,
                              int packedLight, int packedOverlay) {
 
-        System.out.println("Rendering Crossbow");
 
         Minecraft mc = Minecraft.getInstance();
 
-        // Render crossbow normally
         BakedModel model = mc.getItemRenderer().getItemModelShaper().getItemModel(stack);
         mc.getItemRenderer().render(stack, displayContext, false, poseStack,
                 bufferSource, packedLight, packedOverlay, model);
@@ -56,8 +54,6 @@ public class CrossbowAmmoRenderer extends BlockEntityWithoutLevelRenderer {
         ChargedProjectiles chargedprojectiles = (ChargedProjectiles)stack.get(DataComponents.CHARGED_PROJECTILES);
         if (chargedprojectiles != null && !chargedprojectiles.isEmpty()) {
             ItemStack itemstack = (ItemStack) chargedprojectiles.getItems().get(0);
-
-            System.out.println("Projectile: "+itemstack);
 
             ResourceLocation overlay = getOverlay(itemstack, mc);
             if (overlay == null) return;
@@ -94,12 +90,10 @@ public class CrossbowAmmoRenderer extends BlockEntityWithoutLevelRenderer {
         if (item == Items.ECHO_SHARD) return ECHO_SHARD_OVERLAY;
         if (item == Items.LIGHTNING_ROD) return LIGHTNING_ROD_OVERLAY;
         if (item == ModItems.BLOOD_ORB.get()) return BLOOD_SHARD_OVERLAY;
-
-        // Check stone tool materials tag
         if (mc.level != null && projectile.is(
                 mc.level.registryAccess()
                         .registryOrThrow(Registries.ITEM)
-                        .getTag(ItemTags.STONE_TOOL_MATERIALS)
+                        .getTag(ModTags.Items.GRAPESHOT_AMMUNITION)
                         .orElse(null))) {
             return PEBBLES_OVERLAY;
         }

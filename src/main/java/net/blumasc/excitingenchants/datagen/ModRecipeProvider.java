@@ -16,6 +16,8 @@ import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
+import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
+import net.neoforged.neoforge.common.conditions.NotCondition;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,12 +33,13 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.CURSE_TABLE.get())
                 .pattern("HRH")
                 .pattern("ECE")
-                .pattern("CCC")
+                .pattern("COC")
                 .define('H', BaseModItems.SUN_HORN)
                 .define('R', Items.REDSTONE_BLOCK)
                 .define('E', Items.EMERALD)
                 .define('C', Items.CRYING_OBSIDIAN)
-                .unlockedBy("has_crying_obsidian", has(Items.CRYING_OBSIDIAN)).save(recipeOutput);
+                .define('O', ModBlocks.CURSED_OBSIDIAN)
+                .unlockedBy("has_cursed_obsidian", has(ModBlocks.CURSED_OBSIDIAN)).save(recipeOutput);
 
         fenceBuilder(ModBlocks.GOLDEN_FENCE, Ingredient.of(ModBlocks.GOLDEN_PLANKS))
                 .unlockedBy("has_golden_planks", has(ModBlocks.GOLDEN_PLANKS))
@@ -66,6 +69,13 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_cooked_authentic_meat", has(ModItems.COOKED_AUTHENTIC_MEAT))
                 .save(recipeOutput);
 
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.CLEANSING_SOAP, 1)
+                .requires(Items.BONE_MEAL)
+                .requires(Items.CLAY_BALL)
+                .requires(ModBlocks.CURSED_OBSIDIAN)
+                .unlockedBy("has_cursed_obsidian", has(ModBlocks.CURSED_OBSIDIAN))
+                .save(recipeOutput);
+
         stonecutterList(recipeOutput, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GOLDEN_BLOCK, List.of(
                 ModBlocks.GOLDEN_BRICKS,
                 ModBlocks.GOLDEN_BRICK_STAIRS,
@@ -81,7 +91,9 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
         stonecutting(recipeOutput, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GOLDEN_BRICK_SLAB, ModBlocks.GOLDEN_BLOCK, 2);
 
-        SmithingTransformRecipeBuilder.smithing(Ingredient.of(new ItemLike[]{Items.RED_WOOL}), Ingredient.of(new ItemLike[]{ModItems.SPEAR_BLANK}), Ingredient.of(new ItemLike[]{Items.GOLD_INGOT}), RecipeCategory.TOOLS, ModItems.SWORDSPEAR.get()).unlocks("has_spear_blank", has(ModItems.SPEAR_BLANK)).save(recipeOutput, ExcitingEnchantsMod.MODID + ":spear_smithing");
+        SmithingTransformRecipeBuilder.smithing(Ingredient.of(new ItemLike[]{Items.RED_WOOL}), Ingredient.of(new ItemLike[]{ModItems.SPEAR_BLANK}), Ingredient.of(new ItemLike[]{Items.GOLD_INGOT}), RecipeCategory.TOOLS, ModItems.SWORDSPEAR.get()).unlocks("has_spear_blank", has(ModItems.SPEAR_BLANK)).save(recipeOutput.withConditions(
+                new NotCondition(new ModLoadedCondition("spears"))
+        ), ExcitingEnchantsMod.MODID + ":spear_smithing");
         oreSmelting(recipeOutput, Collections.singletonList(ModItems.DULL_SPEAR), RecipeCategory.COMBAT, ModItems.SUPERHEATED_SPEAR, 0.25f, 200, "superheating_spear");
         foodSmelting(recipeOutput, Collections.singletonList(ModItems.RAW_CARP), RecipeCategory.FOOD, ModItems.COOKED_CARP, 0.25f, 200, "cooking_carp");
         foodSmelting(recipeOutput, Collections.singletonList(ModItems.GOLDEN_MEAT), RecipeCategory.FOOD, ModItems.COOKED_GOLDEN_MEAT, 0.25f, 200, "cooking_golden_meat");

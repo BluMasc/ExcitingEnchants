@@ -38,6 +38,9 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.VibrationParticleOption;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
@@ -62,6 +65,7 @@ import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.event.sound.PlaySoundEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -74,12 +78,85 @@ public class ClientHimHandler {
     private static final int SYNC_THRESHOLD = 10;
     private static int lastSyncedValue = 0;
     private static int lastPhase = -1;
+    private static int lastArmorCount = 0;
+
+    private static long lastMessageTime = 0;
+    private static final long MESSAGE_COOLDOWN = 500; //ms
+
+    private static final Random RANDOM = new Random();
+    private static final String MESSAGE_PREFIX = "chat."+ExcitingEnchantsMod.MODID+".him.";
+    private static final String[] FIRST_ARMOR_KEYS = {
+            MESSAGE_PREFIX + "first_equipped_1",
+            MESSAGE_PREFIX + "first_equipped_2",
+            MESSAGE_PREFIX + "first_equipped_3",
+            MESSAGE_PREFIX + "first_equipped_4"
+    };
+    private static final String[][] CRAFTING_KEYS = {{
+            MESSAGE_PREFIX + "crafting_1",
+            MESSAGE_PREFIX + "crafting_2",
+            MESSAGE_PREFIX + "crafting_3"
+    },{
+            MESSAGE_PREFIX + "crafting_1.unequiped"
+    }
+    };
+    private static final String[][] SLEEPING_KEYS = {{
+            MESSAGE_PREFIX + "sleeping_1",
+            MESSAGE_PREFIX + "sleeping_2",
+            MESSAGE_PREFIX + "sleeping_3"
+    },{
+            MESSAGE_PREFIX + "sleeping_1.unequiped"
+    }
+    };
+    private static final String[][] KILL_ANIMAL_KEYS = {{
+            MESSAGE_PREFIX + "kill_animal_1",
+            MESSAGE_PREFIX + "kill_animal_2",
+            MESSAGE_PREFIX + "kill_animal_3"
+    },
+            {
+                    MESSAGE_PREFIX + "kill_animal_1.unequiped"
+            }
+    };
+    private static final String[][] KILL_MONSTER_KEYS = {{
+            MESSAGE_PREFIX + "kill_monster_1",
+            MESSAGE_PREFIX + "kill_monster_2",
+            MESSAGE_PREFIX + "kill_monster_3"
+    },{
+            MESSAGE_PREFIX + "kill_monster_1.unequiped"
+    }
+    };
+    private static final String[][] MINING_KEYS = {{
+            MESSAGE_PREFIX + "mining_1",
+            MESSAGE_PREFIX + "mining_2"
+    },{
+            MESSAGE_PREFIX + "mining_1.unequiped"
+    }
+    };
+    private static final String[] LAST_ARMOR_KEYS = {
+            MESSAGE_PREFIX + "last_removed_1",
+            MESSAGE_PREFIX + "last_removed_2",
+            MESSAGE_PREFIX + "last_removed_3"
+    };
+    private static final String[] DEATH_KEYS = {
+            MESSAGE_PREFIX + "death_1",
+            MESSAGE_PREFIX + "death_2",
+            MESSAGE_PREFIX + "death_3"
+    };
+
+    private static final String[] JOIN_WORLD_KEYS = {
+            MESSAGE_PREFIX + "join_world_1",
+            MESSAGE_PREFIX + "join_world_2",
+            MESSAGE_PREFIX + "join_world_3"
+    };
+    private static boolean wasAsleep = false;
 
     @SubscribeEvent
     public static void onClientJoin(ClientPlayerNetworkEvent.LoggingIn event) {
         ClientHimData.horror_status = 0;
         lastSyncedValue = 0;
         lastPhase = -1;
+        lastArmorCount = 0;
+        lastMessageTime = 0;
+        wasAsleep = false;
         PacketDistributor.sendToServer(new HorrorRequestPacket());
     }
 
@@ -91,6 +168,9 @@ public class ClientHimHandler {
         ClientHimData.horror_status = 0;
         lastSyncedValue = 0;
         lastPhase = -1;
+        lastArmorCount = 0;
+        lastMessageTime = 0;
+        wasAsleep = false;
     }
 
     @SubscribeEvent
@@ -105,7 +185,60 @@ public class ClientHimHandler {
             handleTimeInterval(mc.player);
         }
 
+        checkArmorChanges(mc.player);
+        checkSleepState(mc.player);
+
         lastPhase = currentPhase;
+    }
+    public static void onCraft(LocalPlayer player) {
+        if (ClientHimData.horror_status > 1) {
+            sendHerobirineChatMessage("Crafting", ClientHimData.horror_status, false, countHorrorArmorPieces(player)>0);
+        }
+    }
+    public static void onKillAnimal(LocalPlayer player) {
+        if (ClientHimData.horror_status > 1) {
+            sendHerobirineChatMessage("Kill animal", ClientHimData.horror_status, false, countHorrorArmorPieces(player)>0);
+        }
+    }
+    public static void onKillMonster(LocalPlayer player) {
+        if (ClientHimData.horror_status > 1) {
+            sendHerobirineChatMessage("Kill monster", ClientHimData.horror_status, false, countHorrorArmorPieces(player)>0);
+        }
+    }
+    public static void onMineBlock(LocalPlayer player) {
+        if (ClientHimData.horror_status > 1) {
+            sendHerobirineChatMessage("Mining", ClientHimData.horror_status / 5, false, countHorrorArmorPieces(player)>0);
+        }
+    }
+    public static void onPlayerDeath(LocalPlayer player) {
+        if (countHorrorArmorPieces(player)>0) {
+            sendHerobirineChatMessage("Player death", 100, true, true);
+        }
+    }
+    public static void onJoinWorld(LocalPlayer player) {
+        if (countHorrorArmorPieces(player)>0) {
+            sendHerobirineChatMessage("Join world", 100, true, true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onScreenOpen(ScreenEvent.Init.Post event) {
+        if (event.getScreen() instanceof net.minecraft.client.gui.screens.inventory.CraftingScreen) {
+            LocalPlayer player = Minecraft.getInstance().player;
+            if (player != null) {
+                onCraft(player);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerJoin(ClientPlayerNetworkEvent.LoggingIn event) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null) {
+            Minecraft.getInstance().tell(() -> {
+                onJoinWorld(player);
+            });
+        }
     }
 
     private static void handleTimeInterval(LocalPlayer player) {
@@ -125,6 +258,87 @@ public class ClientHimHandler {
         }
     }
 
+    private static void checkArmorChanges(LocalPlayer player) {
+        int currentArmorCount = countHorrorArmorPieces(player);
+
+        if (lastArmorCount == 0 && currentArmorCount > 0 && ClientHimData.horror_status == 0) {
+            sendHerobirineChatMessage("First armor equipped", 100, true, true);
+        }
+        else if (lastArmorCount > 0 && currentArmorCount == 0) {
+            sendHerobirineChatMessage("Last armor removed", 100, true, false);
+        }
+
+        lastArmorCount = currentArmorCount;
+    }
+
+    private static void checkSleepState(LocalPlayer player) {
+        boolean isNowAsleep = player.isSleeping();
+        if (isNowAsleep && !wasAsleep) {
+            int armorCount = countHorrorArmorPieces(player);
+            if (armorCount > 0) {
+                sendHerobirineChatMessage("Sleeping", ClientHimData.horror_status, false, true);
+            }
+        }
+
+        wasAsleep = isNowAsleep;
+    }
+    private static void sendHerobirineChatMessage(String actionType, int baseChance, boolean forceMessage, boolean hasArmor) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastMessageTime < MESSAGE_COOLDOWN) {
+            return;
+        }
+        if (!forceMessage && RANDOM.nextInt(100) >= baseChance) {
+            return;
+        }
+
+        String[] messageKeys = null;
+
+        int data = hasArmor? 0:1;
+
+        switch (actionType) {
+            case "First armor equipped":
+                messageKeys = FIRST_ARMOR_KEYS;
+                break;
+            case "Last armor removed":
+                messageKeys = LAST_ARMOR_KEYS;
+                break;
+            case "Crafting":
+                messageKeys = CRAFTING_KEYS[data];
+                break;
+            case "Sleeping":
+                messageKeys = SLEEPING_KEYS[data];
+                break;
+            case "Kill animal":
+                messageKeys = KILL_ANIMAL_KEYS[data];
+                break;
+            case "Kill monster":
+                messageKeys = KILL_MONSTER_KEYS[data];
+                break;
+            case "Mining":
+                messageKeys = MINING_KEYS[data];
+                break;
+            case "Player death":
+                messageKeys = DEATH_KEYS;
+                break;
+            case "Join world":
+                messageKeys = JOIN_WORLD_KEYS;
+                break;
+            default:
+                return;
+        }
+
+        if (messageKeys != null && messageKeys.length > 0) {
+            String selectedKey = messageKeys[RANDOM.nextInt(messageKeys.length)];
+            Component message = Component.translatable(selectedKey);
+
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null) {
+                mc.gui.getChat().addMessage(message, null, null);
+                lastMessageTime = currentTime;
+            }
+        }
+    }
+
     private static int countHorrorArmorPieces(LocalPlayer player) {
         int count = 0;
         for (ItemStack stack : player.getArmorSlots()) {
@@ -137,120 +351,11 @@ public class ClientHimHandler {
 
     private static boolean hasHorrorEnchantment(ItemStack stack) {
         return stack.getEnchantments().keySet().stream()
-                .anyMatch(holder -> holder.is(
-                        ModEnchantments.HIM));
+                .anyMatch(holder -> holder.is(ModEnchantments.HIM));
     }
 
     public static void setLastSyncedValue(int value) {
         lastSyncedValue = value;
-    }
-
-    private static final ResourceLocation HIM_SKIN =
-            ResourceLocation.fromNamespaceAndPath(ExcitingEnchantsMod.MODID, "textures/entity/him_skin.png");
-
-    private static final Random RANDOM = new Random();
-    private static float himSpawnChance = 0f;
-    private static long lastHimSpawnTick = 0;
-    private static final int HIM_SPAWN_COOLDOWN = 200;
-
-    @SubscribeEvent
-    public static void onFogDensity(ViewportEvent.RenderFog event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || !isWearingHorrorArmor(mc.player)) return;
-
-        int horror = ClientHimData.horror_status;
-        if (horror < 25) return;
-
-        float t = Mth.clamp((horror - 25f) / 75f, 0f, 1f);
-
-        float defaultFar = event.getFarPlaneDistance();
-
-        event.setNearPlaneDistance(Mth.lerp(t, defaultFar * 0.6f, 2f));
-        event.setFarPlaneDistance(Mth.lerp(t, defaultFar, 8f));
-        event.setCanceled(true);
-    }
-
-    @SubscribeEvent
-    public static void onBlockRender(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS) return;
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || !isWearingHorrorArmor(mc.player)) return;
-        if (ClientHimData.horror_status < 75) return;
-
-        HorrorBlockRenderHandler.torchSwapActive = true;
-    }
-
-    @SubscribeEvent
-    public static void onRenderLevelLast(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || !isWearingHorrorArmor(mc.player)) return;
-        if (ClientHimData.horror_status < 50) return;
-
-        long currentTick = mc.level.getGameTime();
-        if (currentTick - lastHimSpawnTick < HIM_SPAWN_COOLDOWN) return;
-        himSpawnChance = (ClientHimData.horror_status - 50f) / 50f;
-        if (RANDOM.nextFloat() > himSpawnChance) return;
-
-        lastHimSpawnTick = currentTick;
-
-        renderHimAtFogEdge(event.getPoseStack(), event.getProjectionMatrix(), mc);
-    }
-
-    private static void renderHimAtFogEdge(PoseStack poseStack, Matrix4f projectionMatrix, Minecraft mc) {
-        LocalPlayer player = mc.player;
-        float fogEdgeDistance = getFogEdgeDistance();
-
-        float angle = RANDOM.nextFloat() * 360f;
-        double radians = Math.toRadians(angle);
-
-        double dx = Math.sin(radians) * fogEdgeDistance;
-        double dz = Math.cos(radians) * fogEdgeDistance;
-
-        double x = player.getX() + dx;
-        double y = player.getY();
-        double z = player.getZ() + dz;
-
-        Camera camera = mc.gameRenderer.getMainCamera();
-        Vec3 camPos = camera.getPosition();
-
-        poseStack.pushPose();
-        poseStack.translate(x - camPos.x, y - camPos.y, z - camPos.z);
-
-        poseStack.mulPose(Axis.YP.rotationDegrees(-angle + 180f));
-
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderTexture(0, HIM_SKIN);
-
-        float alpha = Math.min(1f, himSpawnChance);
-        renderHimBillboard(poseStack, mc.renderBuffers().bufferSource(), alpha);
-
-        RenderSystem.disableBlend();
-        poseStack.popPose();
-    }
-
-    private static void renderHimBillboard(PoseStack poseStack, MultiBufferSource bufferSource, float alpha) {
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityTranslucent(HIM_SKIN));
-        PoseStack.Pose pose = poseStack.last();
-
-        float w = 0.5f;
-        float h = 2f;
-
-        for (int side = 0; side < 2; side++) {
-            float xSign = side == 0 ? 1f : -1f;
-            consumer.addVertex(pose, -w * xSign, 0,  0).setColor(1f, 1f, 1f, alpha).setUv(side == 0 ? 0f : 1f, 1f).setNormal(pose, 0, 1, 0);
-            consumer.addVertex(pose,  w * xSign, 0,  0).setColor(1f, 1f, 1f, alpha).setUv(side == 0 ? 1f : 0f, 1f).setNormal(pose, 0, 1, 0);
-            consumer.addVertex(pose,  w * xSign, h,  0).setColor(1f, 1f, 1f, alpha).setUv(side == 0 ? 1f : 0f, 0f).setNormal(pose, 0, 1, 0);
-            consumer.addVertex(pose, -w * xSign, h,  0).setColor(1f, 1f, 1f, alpha).setUv(side == 0 ? 0f : 1f, 0f).setNormal(pose, 0, 1, 0);
-        }
-    }
-
-    private static float getFogEdgeDistance() {
-        int horror = ClientHimData.horror_status;
-        float t = Math.clamp((horror - 25f) / 75f, 0f, 1f);
-        return Mth.lerp(t, 48f, 8f);
     }
 
     private static boolean isWearingHorrorArmor(LocalPlayer player) {

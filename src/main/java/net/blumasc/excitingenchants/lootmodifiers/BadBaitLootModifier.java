@@ -66,16 +66,13 @@ public class BadBaitLootModifier extends LootModifier {
 
         ObjectArrayList<ItemStack> newLoot = new ObjectArrayList<>();
         rollFishingNoFish(serverLevel, params, newLoot, context.getRandom(), luck);
-        // Special chunk rare fish check
-        //SpecialChunkData chunkData = SpecialChunkData.get(serverLevel);
-        //if (chunkData.isInitialized()) {
-        //    ChunkPos bobberChunk = new ChunkPos(hook.blockPosition());
-        //    if (bobberChunk.equals(chunkData.getSpecialChunk())) {
-        //        if (serverLevel.getRandom().nextFloat() < 0.01f) {
-        //            newLoot.add(new ItemStack(ModItems.RARE_FISH.get()));
-        //        }
-        //    }
-        //}
+        ChunkPos chunkPos = new ChunkPos(hook.blockPosition());
+        if ((chunkPos.x == 4 || chunkPos.x == -4 ) && (chunkPos.z == 4 || chunkPos.z == -4)) {
+            if (serverLevel.getRandom().nextFloat() < 0.02f) {
+                newLoot.clear();
+                newLoot.add(new ItemStack(ModItems.RARE_FISH.get()));
+            }
+        }
 
         return newLoot;
     }

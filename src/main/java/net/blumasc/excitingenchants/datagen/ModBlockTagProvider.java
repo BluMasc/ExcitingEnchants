@@ -5,6 +5,7 @@ import net.blumasc.excitingenchants.block.ModBlocks;
 import net.blumasc.excitingenchants.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.Blocks;
@@ -39,6 +40,14 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(Blocks.FERN)
                 .remove(Blocks.SPORE_BLOSSOM);
 
+        tag(ModTags.Blocks.NEWTON_BLOCKS)
+                .addTag(BlockTags.DIRT)
+                .addTag(BlockTags.create(ResourceLocation.fromNamespaceAndPath("c","stones")))
+                .add(Blocks.DRIPSTONE_BLOCK)
+                .addTag(BlockTags.BASE_STONE_NETHER)
+                .addTag(BlockTags.ENDERMAN_HOLDABLE)
+                .addTag(BlockTags.SOUL_SPEED_BLOCKS);
+
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .add(ModBlocks.CURSE_TABLE.get())
                 .add(ModBlocks.GOLDEN_BLOCK.get())
@@ -50,7 +59,11 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.GOLDEN_PLANK_SLAB.get())
                 .add(ModBlocks.GOLDEN_PLANK_STAIRS.get())
                 .add(ModBlocks.GOLDEN_BRICK_STAIRS.get())
-                .add(ModBlocks.GOLDEN_GRASS.get());
+                .add(ModBlocks.GOLDEN_GRASS.get())
+                .add(ModBlocks.CURSED_OBSIDIAN.get());
+
+        tag(BlockTags.NEEDS_DIAMOND_TOOL)
+                .add(ModBlocks.CURSED_OBSIDIAN.get());
 
         tag(BlockTags.LOGS)
                 .add(ModBlocks.GOLDEN_LOG.get());
