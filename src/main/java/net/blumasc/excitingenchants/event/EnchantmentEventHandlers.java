@@ -109,6 +109,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @EventBusSubscriber(modid = ExcitingEnchantsMod.MODID)
 public class EnchantmentEventHandlers {
@@ -187,7 +188,7 @@ public class EnchantmentEventHandlers {
         List<BalloonEntity> actualEntities = player.level().getNearbyEntities(BalloonEntity.class, TargetingConditions.DEFAULT, player, new AABB(player.getOnPos()).inflate(6))
                 .stream()
                 .filter(b -> player.getUUID().equals(b.getBoundEntity() != null ? b.getBoundEntity().getUUID() : null))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
         while(actualEntities.size()>neededBalloonCount){
             actualEntities.get(0).pop();
             actualEntities.remove(0);
