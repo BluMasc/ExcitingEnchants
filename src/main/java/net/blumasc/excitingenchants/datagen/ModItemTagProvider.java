@@ -119,6 +119,9 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 .add(ModItems.COOKED_CARP.get())
                 .add(ModItems.COOKED_RAINBOW_FISH.get());
 
+        tag(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c","obsidians")))
+                .add(ModBlocks.CURSED_OBSIDIAN.asItem());
+
         tag(ItemTags.OCELOT_FOOD)
                 .add(ModItems.RAW_CARP.get())
                 .add(ModItems.RAW_RAINBOW_FISH.get())

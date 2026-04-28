@@ -113,6 +113,8 @@ public class EnderPocketsOverlay {
         double mx = event.getMouseX();
         double my = event.getMouseY();
 
+        g.pose().pushPose();
+        //g.pose().translate(0, 0, 150);
         g.blit(PANEL_TEXTURES[n - 1], px, py, 0, 0, TEXTURE_W, TEXTURE_H, TEXTURE_W, TEXTURE_H);
 
         for (int i = 0; i < n; i++) {
@@ -121,7 +123,30 @@ public class EnderPocketsOverlay {
 
             if (!stack.isEmpty()) {
                 g.renderItem(stack, ix, iy);
-                g.renderItemDecorations(mc.font, stack, ix, iy);
+                if (stack.getCount() != 1) {
+                    String text = String.valueOf(stack.getCount());
+                    g.pose().pushPose();
+                    g.pose().translate(0, 0, 200);
+                    g.drawString(
+                            mc.font,
+                            text,
+                            ix + 17 - mc.font.width(text),
+                            iy + 9,
+                            0xFFFFFF,
+                            true
+                    );
+                    g.pose().popPose();
+                }
+                if (stack.isDamaged()) {
+                    int barWidth = Math.round(13.0F - (float)stack.getDamageValue() * 13.0F / (float)stack.getMaxDamage());
+                    int color = stack.getBarColor();
+
+                    int x = ix + 2;
+                    int y = iy + 13;
+
+                    g.fill(x, y, x + 13, y + 2, 0xFF000000);
+                    g.fill(x, y, x + barWidth, y + 1, color | 0xFF000000);
+                }
             }
 
             if (mx >= ix - 1 && mx < ix + 17 && my >= iy - 1 && my < iy + 17) {
@@ -136,6 +161,7 @@ public class EnderPocketsOverlay {
         if (hovered >= 0 && !cachedSlots.get(hovered).isEmpty()) {
             g.renderTooltip(mc.font, cachedSlots.get(hovered), (int) mx, (int) my);
         }
+        g.pose().popPose();
     }
 
     @SubscribeEvent

@@ -48,6 +48,9 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .addTag(BlockTags.ENDERMAN_HOLDABLE)
                 .addTag(BlockTags.SOUL_SPEED_BLOCKS);
 
+        tag(BlockTags.create(ResourceLocation.fromNamespaceAndPath("c","obsidians")))
+                .add(ModBlocks.CURSED_OBSIDIAN.get());
+
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .add(ModBlocks.CURSE_TABLE.get())
                 .add(ModBlocks.GOLDEN_BLOCK.get())
