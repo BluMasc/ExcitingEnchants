@@ -24,7 +24,7 @@ public class ModBlocks {
             () -> new CurseTableBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ENCHANTING_TABLE).noOcclusion()));
 
     public static final DeferredBlock<BreakingBlock> BREAKING_BLOCK = registerBlock("breaking_block",
-            () -> new BreakingBlock(BlockBehaviour.Properties.of().noOcclusion()));
+            () -> new BreakingBlock(BlockBehaviour.Properties.of().noOcclusion().strength(-1.0f, 3600000.0f)));
 
     public static final DeferredBlock<InkLayerBlock> INK_LAYER_BLOCK = registerBlock("ink_layer",
             () -> new InkLayerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SLIME_BLOCK).noOcclusion().replaceable()));
