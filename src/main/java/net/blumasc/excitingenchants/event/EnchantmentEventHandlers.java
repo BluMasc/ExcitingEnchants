@@ -121,13 +121,8 @@ public class EnchantmentEventHandlers {
         if (player.tickCount % 10 != 0) return;
 
         if (player.level().isClientSide) return;
-
-        Holder<Enchantment> shrinkHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.DIVINER);
-
-        ItemStack boots = player.getItemBySlot(EquipmentSlot.HEAD);
-        int level = boots.getEnchantmentLevel(shrinkHolder);
+        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.DIVINER,  helmet);
 
         if (level <= 0) return;
         double radius = 10 + (5 * level);
@@ -170,21 +165,12 @@ public class EnchantmentEventHandlers {
         if(!player.onGround()) return;
 
         int neededBalloonCount = 0;
-
-        Holder<Enchantment> heliumHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.HELIUM);
-
-        Holder<Enchantment> bulletTimeHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.BULLET_TIME);
-
         ItemStack mainHand = player.getItemBySlot(EquipmentSlot.MAINHAND);
         ItemStack offHand = player.getItemBySlot(EquipmentSlot.OFFHAND);
 
-        neededBalloonCount += mainHand.getEnchantmentLevel(bulletTimeHolder);
-        neededBalloonCount += offHand.getEnchantmentLevel(bulletTimeHolder);
-        neededBalloonCount += (player.getInventory().items.stream().filter(i -> i.getEnchantmentLevel(heliumHolder)>0).count()/5);
+        neededBalloonCount += getEnchantmentLevel(player.level(), ModEnchantments.BULLET_TIME,  mainHand);
+        neededBalloonCount += getEnchantmentLevel(player.level(), ModEnchantments.BULLET_TIME,  offHand);
+        neededBalloonCount += (player.getInventory().items.stream().filter(i -> getEnchantmentLevel(player.level(), ModEnchantments.HELIUM,  i)>0).count()/5);
         List<BalloonEntity> actualEntities = player.level().getNearbyEntities(BalloonEntity.class, TargetingConditions.DEFAULT, player, new AABB(player.getOnPos()).inflate(6))
                 .stream()
                 .filter(b -> player.getUUID().equals(b.getBoundEntity() != null ? b.getBoundEntity().getUUID() : null))
@@ -211,12 +197,7 @@ public class EnchantmentEventHandlers {
         if(player.onGround())return;
 
         ItemStack item = player.getMainHandItem();
-
-        Holder<Enchantment> bulletTimeHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.BULLET_TIME);
-
-        int level = item.getEnchantmentLevel(bulletTimeHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.BULLET_TIME,  item);
         if (level <= 0) return;
 
         player.addEffect(new MobEffectInstance(
@@ -233,20 +214,15 @@ public class EnchantmentEventHandlers {
 
         Player player = event.getEntity();
 
+        if (player.level().isClientSide()) return;
         if (player.tickCount % 20 != 0) return;
-
-        Holder<Enchantment> hungryHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.HUNGRY);
-
         ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
-        int level = helmet.getEnchantmentLevel(hungryHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.HUNGRY,  helmet);
         if (level > 0 && player.getFoodData().needsFood()) {
             PlayerEnchantmentState pes = PlayerEnchantmentStateHandler.loadState(player);
             if (!pes.isOnCooldown(ModEnchantments.HUNGRY.location(), player.level().getGameTime())) {
                 ItemStack food = selectFood(player);
                 if (food.isEmpty()) return;
-
                 fakeEat(player, food);
                 pes.setCooldown(ModEnchantments.HUNGRY.location(), player.level().getGameTime() + 5 * 20);
                 PlayerEnchantmentStateHandler.saveState(player, pes);
@@ -338,13 +314,8 @@ public class EnchantmentEventHandlers {
     public static void onBulwarkTick(PlayerTickEvent.Pre event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
-
-        Holder<Enchantment> squidHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.BULWARK);
-
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
-        int level = chest.getEnchantmentLevel(squidHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.BULWARK,  chest);
         if (level > 0) {
 
             if (player.isCrouching()) {
@@ -382,12 +353,8 @@ public class EnchantmentEventHandlers {
         Entity causer = event.getEntity().getLastDamageSource().getEntity();
         if (causer instanceof LivingEntity livingcauser) {
             if (entity.distanceToSqr(livingcauser) > 5 * 5) return;
-            Holder<Enchantment> squidHolder = entity.level().registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getHolderOrThrow(ModEnchantments.SQUID_ENCOUNTER);
-
             ItemStack chest = entity.getItemBySlot(EquipmentSlot.CHEST);
-            int level = chest.getEnchantmentLevel(squidHolder);
+            int level = getEnchantmentLevel(entity.level(), ModEnchantments.SQUID_ENCOUNTER,  chest);
             if (level > 0) {
                 PlayerEnchantmentState pes = PlayerEnchantmentStateHandler.loadState(entity);
                 if (!pes.isOnCooldown(ModEnchantments.SQUID_ENCOUNTER.location(), entity.level().getGameTime())) {
@@ -470,13 +437,8 @@ public class EnchantmentEventHandlers {
 
         Entity causer = event.getDamageSource().getEntity();
         if (!(causer instanceof LivingEntity attacker)) return;
-
-        Holder<Enchantment> cleaveHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.CLEAVING);
-
         ItemStack weapon = attacker.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(cleaveHolder);
+        int level = getEnchantmentLevel(target.level(), ModEnchantments.CLEAVING,  weapon);
         if (level <= 0) return;
 
         ItemStack shield = target.getUseItem();
@@ -498,12 +460,8 @@ public class EnchantmentEventHandlers {
         if (!(killerEntity instanceof LivingEntity attacker)) return;
 
         if (!(attacker instanceof Player player)) return;
-        Holder<Enchantment> soulRetrieverHolder = deadEntity.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SOUL_RETRIEVER);
-
         ItemStack weapon = attacker.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(soulRetrieverHolder);
+        int level = getEnchantmentLevel(deadEntity.level(), ModEnchantments.SOUL_RETRIEVER,  weapon);
         if (level <= 0) return;
         if(deadEntity.level() instanceof ServerLevel serverLevel) {
             serverLevel.playSound(null, deadEntity.getX(), deadEntity.getY(), deadEntity.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.0f, player.getRandom().nextFloat()+0.5f);
@@ -525,13 +483,8 @@ public class EnchantmentEventHandlers {
     public static void onSoulBlock(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
-
-        Holder<Enchantment> soulRetrieverHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SOUL_RETRIEVER);
-
         ItemStack weapon = player.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(soulRetrieverHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.SOUL_RETRIEVER,  weapon);
         if (level <= 0) return;
 
         PlayerEnchantmentState pes = PlayerEnchantmentStateHandler.loadState(player);
@@ -621,13 +574,8 @@ public class EnchantmentEventHandlers {
 
         Entity causer = event.getSource().getEntity();
         if (!(causer instanceof LivingEntity attacker)) return;
-
-        Holder<Enchantment> reapingHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.REAPING);
-
         ItemStack weapon = attacker.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(reapingHolder);
+        int level = getEnchantmentLevel(target.level(), ModEnchantments.REAPING,  weapon);
         if (level <= 0) return;
 
         List<MobEffectInstance> eligibleEffects = target.getActiveEffects().stream()
@@ -693,13 +641,8 @@ public class EnchantmentEventHandlers {
 
         Entity causer = event.getSource().getEntity();
         if (!(causer instanceof LivingEntity attacker)) return;
-
-        Holder<Enchantment> frenzyHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.FRENZY);
-
         ItemStack weapon = attacker.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(frenzyHolder);
+        int level = getEnchantmentLevel(target.level(), ModEnchantments.FRENZY,  weapon);
         if (level <= 0) return;
 
         PlayerEnchantmentState pes = PlayerEnchantmentStateHandler.loadState(attacker);
@@ -719,13 +662,8 @@ public class EnchantmentEventHandlers {
 
         Entity causer = event.getSource().getEntity();
         if (!(causer instanceof LivingEntity attacker)) return;
-
-        Holder<Enchantment> dequipingHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.DEQUIPING);
-
         ItemStack weapon = attacker.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(dequipingHolder);
+        int level = getEnchantmentLevel(target.level(), ModEnchantments.DEQUIPING,  weapon);
         if (level <= 0) return;
 
         event.setAmount(1.0f);
@@ -744,11 +682,7 @@ public class EnchantmentEventHandlers {
         EquipmentSlot slot = armorSlots.get(random.nextInt(armorSlots.size()));
         ItemStack armor = target.getItemBySlot(slot);
         if (armor.isEmpty()) return;
-
-        Holder<Enchantment> bindingHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(Enchantments.BINDING_CURSE);
-        if (armor.getEnchantmentLevel(bindingHolder)>0) return;
+        if (getEnchantmentLevel(target.level(), Enchantments.BINDING_CURSE,  armor)>0) return;
         target.setItemSlot(slot, ItemStack.EMPTY);
         if (!target.level().isClientSide()) {
             ItemEntity dropped = new ItemEntity(
@@ -770,11 +704,7 @@ public class EnchantmentEventHandlers {
 
         ItemStack weapon = player.getMainHandItem();
 
-        Holder<Enchantment> forkHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.FORK);
-
-        int level = weapon.getEnchantmentLevel(forkHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.FORK,  weapon);
         if (level <= 0) return;
 
         float damage = event.getNewDamage();
@@ -800,12 +730,7 @@ public class EnchantmentEventHandlers {
         if (player.fallDistance < 1.5f) return;
         if (player.onGround()) return;
         if (player.isFallFlying()) return;
-
-        Holder<Enchantment> gravityHolder = attacker.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.GRAVITY_IMPLOSION);
-
-        int level = weapon.getEnchantmentLevel(gravityHolder);
+        int level = getEnchantmentLevel(attacker.level(), ModEnchantments.GRAVITY_IMPLOSION,  weapon);
         if (level <= 0) return;
 
         double radius = 3.0 + level;
@@ -854,12 +779,8 @@ public class EnchantmentEventHandlers {
         if (result.getType() == HitResult.Type.ENTITY) {
             Entity hitEntity = ((EntityHitResult) result).getEntity();
             if (hitEntity instanceof Player p) {
-                Holder<Enchantment> pocketsHolder = p.level().registryAccess()
-                        .registryOrThrow(Registries.ENCHANTMENT)
-                        .getHolderOrThrow(ModEnchantments.COLLECTING_POCKETS);
-
                 ItemStack legs = p.getItemBySlot(EquipmentSlot.LEGS);
-                int level = legs.getEnchantmentLevel(pocketsHolder);
+                int level = getEnchantmentLevel(p.level(), ModEnchantments.COLLECTING_POCKETS,  legs);
                 if (p.getRandom().nextFloat() < (0.1 + (0.1 * level))) {
                     ItemStack out = null;
                     Projectile pr = event.getProjectile();
@@ -889,11 +810,8 @@ public class EnchantmentEventHandlers {
         Projectile pr = event.getProjectile();
         if (pr instanceof AbstractArrow aa) {
             ItemStack source = aa.getWeaponItem();
-            Holder<Enchantment> pinningHolder = aa.level().registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getHolderOrThrow(ModEnchantments.PINNING);
             if (source == null) return;
-            int level = source.getEnchantmentLevel(pinningHolder);
+            int level = getEnchantmentLevel(aa.level(), ModEnchantments.PINNING,  source);
             if (level > 0) {
                 if (aa.getDeltaMovement().length() >= 2.0) {
                     if (event.getRayTraceResult().getType() == HitResult.Type.ENTITY) {
@@ -912,11 +830,8 @@ public class EnchantmentEventHandlers {
         Projectile pr = event.getProjectile();
         if (pr instanceof AbstractArrow aa) {
             ItemStack source = aa.getWeaponItem();
-            Holder<Enchantment> ropedHolder = aa.level().registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getHolderOrThrow(ModEnchantments.ROPED);
             if (source == null) return;
-            int level = source.getEnchantmentLevel(ropedHolder);
+            int level = getEnchantmentLevel(aa.level(), ModEnchantments.ROPED,  source);
             if (level > 0) {
                 if (event.getRayTraceResult().getType() == HitResult.Type.ENTITY) {
                     Entity hit = ((EntityHitResult) event.getRayTraceResult()).getEntity();
@@ -962,11 +877,8 @@ public class EnchantmentEventHandlers {
         Projectile pr = event.getProjectile();
         if (pr instanceof AbstractArrow aa) {
             ItemStack source = aa.getWeaponItem();
-            Holder<Enchantment> sharingHolder = aa.level().registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getHolderOrThrow(ModEnchantments.SHARING);
             if (source == null) return;
-            int level = source.getEnchantmentLevel(sharingHolder);
+            int level = getEnchantmentLevel(aa.level(), ModEnchantments.SHARING,  source);
             if (level > 0) {
                 if (event.getRayTraceResult().getType() == HitResult.Type.ENTITY) {
                     Entity hit = ((EntityHitResult) event.getRayTraceResult()).getEntity();
@@ -975,11 +887,15 @@ public class EnchantmentEventHandlers {
                             if (aa.getOwner() instanceof LivingEntity shooterLiving) {
                                 Collection<MobEffectInstance> effects = shooterLiving.getActiveEffects();
                                 if (!effects.isEmpty()) {
-                                    MobEffectInstance chosen = effects.stream()
+                                    List<MobEffectInstance> visibleEffects = effects.stream()
                                             .filter(MobEffectInstance::showIcon)
-                                            .skip(shooterLiving.level().getRandom().nextInt(effects.size()))
-                                            .findFirst()
-                                            .orElse(null);
+                                            .toList();
+
+                                    if (visibleEffects.isEmpty()) return;
+
+                                    MobEffectInstance chosen = visibleEffects.get(
+                                            shooterLiving.level().getRandom().nextInt(visibleEffects.size())
+                                    );
 
                                     if (chosen != null) {
                                         if (hit.level() instanceof ServerLevel serverLevel) {
@@ -1036,12 +952,7 @@ public class EnchantmentEventHandlers {
         Level world = (Level) event.getLevel();
         BlockPos origin = event.getPos();
         ItemStack stack = player.getMainHandItem();
-
-        Holder<Enchantment> reverberatingHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.REVERBERATING);
-
-        int enchantLevel = stack.getEnchantmentLevel(reverberatingHolder);
+        int enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.REVERBERATING,  stack);
         if (enchantLevel <= 0) return;
 
         BlockState originalState = world.getBlockState(origin);
@@ -1110,11 +1021,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = e.getWeaponItem();
         if (stack == null) return;
         if (e.level().isClientSide) return;
-
-        Holder<Enchantment> scorchHolder = e.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SCORCH);
-        int enchantLevel = stack.getEnchantmentLevel(scorchHolder);
+        int enchantLevel = getEnchantmentLevel(e.level(), ModEnchantments.SCORCH,  stack);
         if (enchantLevel <= 0) return;
 
         List<ItemEntity> newDrops = new ArrayList<>();
@@ -1153,11 +1060,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = e.getWeaponItem();
         if (stack == null) return;
         if (e.level().isClientSide) return;
-
-        Holder<Enchantment> scorchHolder = e.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SCORCH);
-        int enchantLevel = stack.getEnchantmentLevel(scorchHolder);
+        int enchantLevel = getEnchantmentLevel(e.level(), ModEnchantments.SCORCH,  stack);
         if (enchantLevel <= 0) return;
 
         List<ItemEntity> newDrops = new ArrayList<>();
@@ -1204,11 +1107,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = e.getWeaponItem();
         if (stack == null) return;
         if (e.level().isClientSide) return;
-
-        Holder<Enchantment> magneticHolder = e.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.MAGNETIC);
-        int enchantLevel = stack.getEnchantmentLevel(magneticHolder);
+        int enchantLevel = getEnchantmentLevel(e.level(), ModEnchantments.MAGNETIC,  stack);
         if (enchantLevel <= 0) return;
 
         List<ItemEntity> newDrops = new ArrayList<>();
@@ -1236,11 +1135,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = e.getWeaponItem();
         if (stack == null) return;
         if (e.level().isClientSide) return;
-
-        Holder<Enchantment> magneticHolder = e.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.MAGNETIC);
-        int enchantLevel = stack.getEnchantmentLevel(magneticHolder);
+        int enchantLevel = getEnchantmentLevel(e.level(), ModEnchantments.MAGNETIC,  stack);
         if (enchantLevel <= 0) return;
 
         List<ItemEntity> newDrops = new ArrayList<>();
@@ -1285,13 +1180,8 @@ public class EnchantmentEventHandlers {
     @SubscribeEvent
     public static void onAirDash(PlayerTickEvent.Post event) {
         Player player = event.getEntity();
-
-        Holder<Enchantment> dashHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.DASH);
-
         ItemStack boots = player.getItemBySlot(EquipmentSlot.LEGS);
-        int level = boots.getEnchantmentLevel(dashHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.DASH,  boots);
         if (level <= 0) return;
 
         PlayerEnchantmentState pes = PlayerEnchantmentStateHandler.loadState(player);
@@ -1340,13 +1230,8 @@ public class EnchantmentEventHandlers {
         Player player = event.getEntity();
 
         if (player.isCrouching()) return;
-
-        Holder<Enchantment> liquidHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.BUOYANT);
-
         ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
-        int level = boots.getEnchantmentLevel(liquidHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.BUOYANT,  boots);
         if (level <= 0) return;
         Vec3 motion = player.getDeltaMovement();
 
@@ -1394,13 +1279,8 @@ public class EnchantmentEventHandlers {
         if (event.getEntity().getLastDamageSource() == null) return;
 
         if (!(event.getEntity().getLastDamageSource().getEntity() instanceof Player attacker)) return;
-
-        Holder<Enchantment> shardHolder = attacker.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SPLATTER);
-
         ItemStack weapon = attacker.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(shardHolder);
+        int level = getEnchantmentLevel(attacker.level(), ModEnchantments.SPLATTER,  weapon);
         if (level <= 0) return;
 
         LivingEntity target = event.getEntity();
@@ -1460,12 +1340,7 @@ public class EnchantmentEventHandlers {
         Level world = player.level();
         ItemStack stack = event.getItemStack();
         if (world.isClientSide()) return;
-
-        Holder<Enchantment> pickerangHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.PICKERANG);
-
-        int enchantLevel = stack.getEnchantmentLevel(pickerangHolder);
+        int enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.PICKERANG,  stack);
         if (enchantLevel <= 0) return;
         PickaxeBoomerangEntity boomerang = new PickaxeBoomerangEntity(world, player, stack.copy(), 10 + (5 * enchantLevel));
         boomerang.setPos(player.getX(), player.getY() + player.getEyeHeight(), player.getZ());
@@ -1490,12 +1365,7 @@ public class EnchantmentEventHandlers {
         if (world.isClientSide) return;
 
         ItemStack stack = player.getItemInHand(event.getHand());
-
-        Holder<Enchantment> sandHolder = world.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.POCKET_SAND);
-
-        int level = stack.getEnchantmentLevel(sandHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.POCKET_SAND,  stack);
         if (level <= 0) return;
 
         int damage = 30 - (5 * level);
@@ -1549,10 +1419,7 @@ public class EnchantmentEventHandlers {
         Level world = player.level();
         ItemStack stack = player.getItemInHand(event.getHand());
         if (world.isClientSide) return;
-        Holder<Enchantment> sandHolder = world.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.TRAP_DIGGER);
-        int level = stack.getEnchantmentLevel(sandHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.TRAP_DIGGER,  stack);
         if (level <= 0) return;
         if (stack.getMaxDamage() - stack.getDamageValue() < 20) return;
         if (event.getFace() != Direction.UP) return;
@@ -1601,11 +1468,7 @@ public class EnchantmentEventHandlers {
         if (world.isClientSide) return;
         if (stack.getMaxDamage() - stack.getDamageValue() < 20) return;
 
-        Holder<Enchantment> pickerangHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.EARTHEN_SPIKE);
-
-        int enchantLevel = stack.getEnchantmentLevel(pickerangHolder);
+        int enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.EARTHEN_SPIKE,  stack);
         if (enchantLevel <= 0) return;
 
         BlockPos pos = event.getPos();
@@ -1646,11 +1509,7 @@ public class EnchantmentEventHandlers {
     public static void crobbowLoading(LivingGetProjectileEvent e) {
         LivingEntity player = e.getEntity();
         ItemStack s = e.getProjectileWeaponItemStack();
-        Holder<Enchantment> echoingLevel = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.ECHOING);
-
-        int enchantLevel = s.getEnchantmentLevel(echoingLevel);
+        int enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.ECHOING,  s);
         if (enchantLevel > 0) {
             if (player instanceof Player p && !p.hasInfiniteMaterials()) {
                 ItemStack echoShardStack = ItemStack.EMPTY;
@@ -1666,11 +1525,7 @@ public class EnchantmentEventHandlers {
                 e.setProjectileItemStack(Items.ECHO_SHARD.getDefaultInstance().copy());
             }
         }
-        Holder<Enchantment> galvanizingHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.GALVANIZING);
-
-        enchantLevel = s.getEnchantmentLevel(galvanizingHolder);
+        enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.GALVANIZING,  s);
         if (enchantLevel > 0) {
             if (player instanceof Player p && !p.hasInfiniteMaterials()) {
                 ItemStack lightningRodStack = ItemStack.EMPTY;
@@ -1686,11 +1541,7 @@ public class EnchantmentEventHandlers {
                 e.setProjectileItemStack(Items.LIGHTNING_ROD.getDefaultInstance().copy());
             }
         }
-        Holder<Enchantment> grapeShotHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.GRAPE_SHOT);
-
-        enchantLevel = s.getEnchantmentLevel(grapeShotHolder);
+        enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.GRAPE_SHOT,  s);
         if (enchantLevel > 0) {
             if (player instanceof Player p && !p.hasInfiniteMaterials()) {
                 ItemStack lightningRodStack = ItemStack.EMPTY;
@@ -1706,20 +1557,12 @@ public class EnchantmentEventHandlers {
                 e.setProjectileItemStack(Items.COBBLESTONE.getDefaultInstance().copy());
             }
         }
-        Holder<Enchantment> sanguineLevel = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SANGUINE);
-
-        enchantLevel = s.getEnchantmentLevel(sanguineLevel);
+        enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.SANGUINE,  s);
         if (enchantLevel > 0) {
             e.setProjectileItemStack(ModItems.BLOOD_ORB.toStack().copy());
         }
         if(e.getProjectileItemStack().isEmpty()) {
-            Holder<Enchantment> livingwoodHolder = player.level().registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getHolderOrThrow(ModEnchantments.LIVING_WOOD);
-
-            enchantLevel = s.getEnchantmentLevel(livingwoodHolder);
+            enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.LIVING_WOOD,  s);
             if (enchantLevel > 0) {
                 e.setProjectileItemStack(Items.STICK.getDefaultInstance().copy());
             }
@@ -1733,11 +1576,7 @@ public class EnchantmentEventHandlers {
         ItemStack shield = player.getUseItem();;
         if (shield == null) return;
 
-        Holder<Enchantment> bouncyHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.DEVOURING);
-
-        int enchantLevel = shield.getEnchantmentLevel(bouncyHolder);
+        int enchantLevel = getEnchantmentLevel(player.level(), ModEnchantments.DEVOURING,  shield);
         if (enchantLevel <= 0) return;
 
         Entity attacker = event.getDamageSource().getEntity();
@@ -1763,11 +1602,7 @@ public class EnchantmentEventHandlers {
         ItemStack brokenItem = event.getOriginal();
         Player entityLiving = event.getEntity();
 
-        Holder<Enchantment> contingencyHolder = entityLiving.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.CONTINGENCY);
-
-        int enchLevel = brokenItem.getEnchantmentLevel(contingencyHolder);
+        int enchLevel = getEnchantmentLevel(entityLiving.level(), ModEnchantments.CONTINGENCY,  brokenItem);
         if (enchLevel <= 0) return;
 
         Level level = entityLiving.level();
@@ -1805,11 +1640,7 @@ public class EnchantmentEventHandlers {
 
         ItemStack shield = entityLiving.getUseItem();
 
-        Holder<Enchantment> contingencyHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.CONTINGENCY);
-
-        int contongencyLevel = shield.getEnchantmentLevel(contingencyHolder);
+        int contongencyLevel = getEnchantmentLevel(player.level(), ModEnchantments.CONTINGENCY,  shield);
         if (contongencyLevel <= 0) return;
 
         Entity sourceEntity = event.getDamageContainer().getSource().getEntity();
@@ -1857,11 +1688,7 @@ public class EnchantmentEventHandlers {
         }
         if (shield.isEmpty() || shield.getItem() != Items.SHIELD)return;
 
-        Holder<Enchantment> immortalityHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.IMMORTALITY);
-
-        int level = shield.getEnchantmentLevel(immortalityHolder);
+        int level = getEnchantmentLevel(player.level(), ModEnchantments.IMMORTALITY,  shield);
         if (level <= 0) return;
 
         event.setCanceled(true);
@@ -1911,17 +1738,9 @@ public class EnchantmentEventHandlers {
         }
         if(weapon == null) return;
         if (weapon.isEmpty()) return;
-
-        Holder<Enchantment> devilHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.DEVILS_TOOL);
-
-        int level = weapon.getEnchantmentLevel(devilHolder);
+        int level = getEnchantmentLevel(target.level(), ModEnchantments.DEVILS_TOOL,  weapon);
         if (level <= 0) return;
-        Holder<Enchantment> impalingHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(Enchantments.IMPALING);
-        level = weapon.getEnchantmentLevel(impalingHolder);
+        level = getEnchantmentLevel(target.level(), Enchantments.IMPALING,  weapon);
         if(level<=0) return;
 
         if(target.getType().is(EntityTypeTags.SENSITIVE_TO_IMPALING))
@@ -1945,17 +1764,9 @@ public class EnchantmentEventHandlers {
 
         Level level = trident.level();
 
-        Holder<Enchantment> poseidonHolder = level.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.POSEIDON);
+        if (getEnchantmentLevel(level, ModEnchantments.POSEIDON,  stack) <= 0) return;
 
-        if (stack.getEnchantmentLevel(poseidonHolder) <= 0) return;
-
-        Holder<Enchantment> devilHolder = level.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.DEVILS_TOOL);
-
-        boolean hasDevilsTool = stack.getEnchantmentLevel(devilHolder) > 0;
+        boolean hasDevilsTool = getEnchantmentLevel(level, ModEnchantments.DEVILS_TOOL,  stack) > 0;
 
         BlockPos placePos = hit.getBlockPos().relative(hit.getDirection());
 
@@ -1980,12 +1791,8 @@ public class EnchantmentEventHandlers {
         Entity causer = event.getSource().getEntity();
         if (!(causer instanceof LivingEntity attacker)) return;
 
-        Holder<Enchantment> spikedHolder = target.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SPIKED_STINGER);
-
         ItemStack weapon = attacker.getMainHandItem();
-        int level = weapon.getEnchantmentLevel(spikedHolder);
+        int level = getEnchantmentLevel(target.level(), ModEnchantments.SPIKED_STINGER,  weapon);
         if (level <= 0) return;
 
         target.addEffect(new MobEffectInstance(BaseModEffects.HALLUCINATION, 10*20*level, level));
@@ -1999,10 +1806,7 @@ public class EnchantmentEventHandlers {
         if (stack == null) return;
         if (e.level().isClientSide) return;
 
-        Holder<Enchantment> goldHolder = e.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.MIDAS);
-        int enchantLevel = stack.getEnchantmentLevel(goldHolder);
+        int enchantLevel = getEnchantmentLevel(e.level(), ModEnchantments.MIDAS,  stack);
         if (enchantLevel <= 0) return;
 
         List<ItemEntity> newDrops = new ArrayList<>();
@@ -2046,11 +1850,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = e.getWeaponItem();
         if (stack == null) return;
         if (e.level().isClientSide) return;
-
-        Holder<Enchantment> goldHolder = e.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.MIDAS);
-        int enchantLevel = stack.getEnchantmentLevel(goldHolder);
+        int enchantLevel = getEnchantmentLevel(e.level(), ModEnchantments.MIDAS,  stack);
         if (enchantLevel <= 0) return;
 
         List<ItemEntity> newDrops = new ArrayList<>();
@@ -2085,48 +1885,56 @@ public class EnchantmentEventHandlers {
         event.getDrops().addAll(newDrops);
     }
 
+    private static final Map<Item, Item> GOLD_ITEM_MAP = new HashMap<>();
+
+    static {
+        GOLD_ITEM_MAP.put(Items.APPLE,                Items.GOLDEN_APPLE);
+        GOLD_ITEM_MAP.put(Items.GOLDEN_APPLE,         Items.GOLDEN_APPLE);
+        GOLD_ITEM_MAP.put(Items.ENCHANTED_GOLDEN_APPLE, Items.ENCHANTED_GOLDEN_APPLE);
+        GOLD_ITEM_MAP.put(Items.CARROT,               Items.GOLDEN_CARROT);
+        GOLD_ITEM_MAP.put(Items.GOLDEN_CARROT,        Items.GOLDEN_CARROT);
+        GOLD_ITEM_MAP.put(Items.MELON_SLICE,          Items.GLISTERING_MELON_SLICE);
+        GOLD_ITEM_MAP.put(Items.GLISTERING_MELON_SLICE, Items.GLISTERING_MELON_SLICE);
+        GOLD_ITEM_MAP.put(Items.RAW_GOLD_BLOCK,       Items.RAW_GOLD_BLOCK);
+        GOLD_ITEM_MAP.put(Items.LEATHER_HORSE_ARMOR,  Items.GOLDEN_HORSE_ARMOR);
+        GOLD_ITEM_MAP.put(Items.IRON_HORSE_ARMOR,     Items.GOLDEN_HORSE_ARMOR);
+        GOLD_ITEM_MAP.put(Items.DIAMOND_HORSE_ARMOR,  Items.GOLDEN_HORSE_ARMOR);
+        GOLD_ITEM_MAP.put(Items.GOLDEN_HORSE_ARMOR,   Items.GOLDEN_HORSE_ARMOR);
+    }
+
     private static ItemStack getGoldResult(ItemStack drop) {
-        if(drop.is(Items.RAW_GOLD_BLOCK)) return drop.copy();
-        if(drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c","storage_blocks")))) return new ItemStack(Items.GOLD_BLOCK, drop.getCount());
-        if(drop.is(ItemTags.COALS)) return new ItemStack(Items.RAW_GOLD, drop.getCount());
-        if(drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c","raw_materials")))) return new ItemStack(Items.RAW_GOLD, drop.getCount());
-        if(drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c","gems")))) return new ItemStack(Items.GOLD_INGOT, drop.getCount());
-        if(drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c","ingots")))) return new ItemStack(Items.GOLD_INGOT, drop.getCount());
-        if(drop.is(ItemTags.SWORDS)) return new ItemStack(Items.GOLDEN_SWORD, drop.getCount());
-        if(drop.is(ItemTags.AXES)) return new ItemStack(Items.GOLDEN_AXE, drop.getCount());
-        if(drop.is(ItemTags.SHOVELS)) return new ItemStack(Items.GOLDEN_SHOVEL, drop.getCount());
-        if(drop.is(ItemTags.HOES)) return new ItemStack(Items.GOLDEN_HOE, drop.getCount());
-        if(drop.is(ItemTags.PICKAXES)) return new ItemStack(Items.GOLDEN_PICKAXE, drop.getCount());
-        if(drop.is(ItemTags.HEAD_ARMOR)) return new ItemStack(Items.GOLDEN_HELMET, drop.getCount());
-        if(drop.is(ItemTags.CHEST_ARMOR)) return new ItemStack(Items.GOLDEN_CHESTPLATE, drop.getCount());
-        if(drop.is(ItemTags.LEG_ARMOR)) return new ItemStack(Items.GOLDEN_LEGGINGS, drop.getCount());
-        if(drop.is(ItemTags.FOOT_ARMOR)) return new ItemStack(Items.GOLDEN_BOOTS, drop.getCount());
-        if(drop.is(Items.APPLE)) return new ItemStack(Items.GOLDEN_APPLE, drop.getCount());
-        if(drop.is(Items.GOLDEN_APPLE)) return new ItemStack(Items.GOLDEN_APPLE, drop.getCount());
-        if(drop.is(Items.ENCHANTED_GOLDEN_APPLE)) return new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, drop.getCount());
-        if(drop.is(Items.CARROT)) return new ItemStack(Items.GOLDEN_CARROT, drop.getCount());
-        if(drop.is(Items.GOLDEN_CARROT)) return new ItemStack(Items.GOLDEN_CARROT, drop.getCount());
-        if(drop.is(Items.MELON_SLICE)) return new ItemStack(Items.GLISTERING_MELON_SLICE, drop.getCount());
-        if(drop.is(Items.GLISTERING_MELON_SLICE)) return new ItemStack(Items.GLISTERING_MELON_SLICE, drop.getCount());
-        if(drop.is(Items.LEATHER_HORSE_ARMOR) ||
-                drop.is(Items.IRON_HORSE_ARMOR) ||
-                drop.is(Items.DIAMOND_HORSE_ARMOR)||
-                drop.is(Items.GOLDEN_HORSE_ARMOR))
-            return new ItemStack(Items.GOLDEN_HORSE_ARMOR, drop.getCount());
-        if(drop.is(ItemTags.LOGS)) return new ItemStack(ModBlocks.GOLDEN_LOG, drop.getCount());
-        if(drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c","foods/cooked_meat")))) return new ItemStack(ModItems.COOKED_GOLDEN_MEAT.get(), drop.getCount());
-        if(drop.is(ItemTags.MEAT)) return new ItemStack(ModItems.GOLDEN_MEAT.get(), drop.getCount());
-        if(drop.is(ItemTags.SAPLINGS)) return new ItemStack(ModBlocks.GOLDEN_GRASS.get(), drop.getCount());
-        if(drop.is(ItemTags.FLOWERS)) return new ItemStack(ModBlocks.GOLDEN_GRASS.get(), drop.getCount());
-        if(drop.is(ItemTags.PLANKS)) return new ItemStack(ModBlocks.GOLDEN_PLANKS.get(), drop.getCount());
-        if(drop.is(ItemTags.FENCES)) return new ItemStack(ModBlocks.GOLDEN_FENCE.get(), drop.getCount());
-        if(drop.is(ItemTags.WOODEN_SLABS)) return new ItemStack(ModBlocks.GOLDEN_PLANK_SLAB.get(), drop.getCount());
-        if(drop.is(ItemTags.WOODEN_STAIRS)) return new ItemStack(ModBlocks.GOLDEN_PLANK_STAIRS.get(), drop.getCount());
-        if(drop.is(ItemTags.STONE_BRICKS)) return new ItemStack(ModBlocks.GOLDEN_BRICKS.get(), drop.getCount());
-        if(drop.is(ItemTags.WALLS)) return new ItemStack(ModBlocks.GOLDEN_BRICK_WALL.get(), drop.getCount());
-        if(drop.is(ItemTags.SLABS)) return new ItemStack(ModBlocks.GOLDEN_BRICK_SLAB.get(), drop.getCount());
-        if(drop.is(ItemTags.STAIRS)) return new ItemStack(ModBlocks.GOLDEN_BRICK_STAIRS.get(), drop.getCount());
-        if(drop.getItem() instanceof BlockItem) return new ItemStack(ModBlocks.GOLDEN_BLOCK.get(), drop.getCount());
+        Item directResult = GOLD_ITEM_MAP.get(drop.getItem());
+        if (directResult != null) {
+            return new ItemStack(directResult, drop.getCount());
+        }
+        if (drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "storage_blocks")))) return new ItemStack(Items.GOLD_BLOCK,          drop.getCount());
+        if (drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "raw_materials"))))  return new ItemStack(Items.RAW_GOLD,            drop.getCount());
+        if (drop.is(ItemTags.COALS))                                                                                return new ItemStack(Items.RAW_GOLD,            drop.getCount());
+        if (drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "gems"))))           return new ItemStack(Items.GOLD_INGOT,          drop.getCount());
+        if (drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "ingots"))))         return new ItemStack(Items.GOLD_INGOT,          drop.getCount());
+        if (drop.is(ItemTags.SWORDS))                                                                               return new ItemStack(Items.GOLDEN_SWORD,        drop.getCount());
+        if (drop.is(ItemTags.AXES))                                                                                 return new ItemStack(Items.GOLDEN_AXE,          drop.getCount());
+        if (drop.is(ItemTags.SHOVELS))                                                                              return new ItemStack(Items.GOLDEN_SHOVEL,       drop.getCount());
+        if (drop.is(ItemTags.HOES))                                                                                 return new ItemStack(Items.GOLDEN_HOE,          drop.getCount());
+        if (drop.is(ItemTags.PICKAXES))                                                                             return new ItemStack(Items.GOLDEN_PICKAXE,      drop.getCount());
+        if (drop.is(ItemTags.HEAD_ARMOR))                                                                           return new ItemStack(Items.GOLDEN_HELMET,       drop.getCount());
+        if (drop.is(ItemTags.CHEST_ARMOR))                                                          return new ItemStack(Items.GOLDEN_CHESTPLATE,   drop.getCount());
+        if (drop.is(ItemTags.LEG_ARMOR))                                                            return new ItemStack(Items.GOLDEN_LEGGINGS,     drop.getCount());
+        if (drop.is(ItemTags.FOOT_ARMOR))                                                           return new ItemStack(Items.GOLDEN_BOOTS,        drop.getCount());
+        if (drop.is(ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "foods/cooked_meat")))) return new ItemStack(ModItems.COOKED_GOLDEN_MEAT.get(), drop.getCount());
+        if (drop.is(ItemTags.MEAT))                                                                 return new ItemStack(ModItems.GOLDEN_MEAT.get(), drop.getCount());
+        if (drop.is(ItemTags.LOGS))                                                                 return new ItemStack(ModBlocks.GOLDEN_LOG,      drop.getCount());
+        if (drop.is(ItemTags.SAPLINGS) || drop.is(ItemTags.FLOWERS))                               return new ItemStack(ModBlocks.GOLDEN_GRASS.get(), drop.getCount());
+        if (drop.is(ItemTags.PLANKS))                                                               return new ItemStack(ModBlocks.GOLDEN_PLANKS.get(), drop.getCount());
+        if (drop.is(ItemTags.FENCES))                                                               return new ItemStack(ModBlocks.GOLDEN_FENCE.get(), drop.getCount());
+        if (drop.is(ItemTags.WOODEN_SLABS))                                                         return new ItemStack(ModBlocks.GOLDEN_PLANK_SLAB.get(), drop.getCount());
+        if (drop.is(ItemTags.WOODEN_STAIRS))                                                        return new ItemStack(ModBlocks.GOLDEN_PLANK_STAIRS.get(), drop.getCount());
+        if (drop.is(ItemTags.STONE_BRICKS))                                                         return new ItemStack(ModBlocks.GOLDEN_BRICKS.get(), drop.getCount());
+        if (drop.is(ItemTags.WALLS))                                                                return new ItemStack(ModBlocks.GOLDEN_BRICK_WALL.get(), drop.getCount());
+        if (drop.is(ItemTags.SLABS))                                                                return new ItemStack(ModBlocks.GOLDEN_BRICK_SLAB.get(), drop.getCount());
+        if (drop.is(ItemTags.STAIRS))                                                               return new ItemStack(ModBlocks.GOLDEN_BRICK_STAIRS.get(), drop.getCount());
+        if (drop.getItem() instanceof BlockItem)                                                    return new ItemStack(ModBlocks.GOLDEN_BLOCK.get(), drop.getCount());
+
         return new ItemStack(Items.GOLD_NUGGET, drop.getCount());
     }
 
@@ -2142,11 +1950,7 @@ public class EnchantmentEventHandlers {
     private static void eatGhoulFoodCheck(Player player, ItemStack food){
         ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
 
-        Holder<Enchantment> reaping = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.GHOULS);
-
-        int enchLevel = helmet.getEnchantmentLevel(reaping);
+        int enchLevel = getEnchantmentLevel(player.level(), ModEnchantments.GHOULS,  helmet);
 
         FoodProperties foodProps = food.getFoodProperties(player);
         if (foodProps == null) return;
@@ -2184,15 +1988,11 @@ public class EnchantmentEventHandlers {
 
         ServerLevel serverLevel = (ServerLevel) player.level();
 
-        Holder<Enchantment> stabilityHolder = serverLevel.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.NEEDED_STABILITY);
-
         List<ItemStack> candidates = new ArrayList<>();
         for (ItemStack stack : player.getInventory().items) {
             if (stack.isEmpty()) continue;
             if (!(stack.getItem() instanceof BlockItem)) continue;
-            if (stack.getEnchantmentLevel(stabilityHolder) <= 0) continue;
+            if (getEnchantmentLevel(serverLevel, ModEnchantments.NEEDED_STABILITY,  stack) <= 0) continue;
             candidates.add(stack);
         }
 
@@ -2223,14 +2023,11 @@ public class EnchantmentEventHandlers {
 
         ServerLevel serverLevel = (ServerLevel) player.level();
 
-        Holder<Enchantment> chorusHolder = serverLevel.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.CHORUS);
         List<Integer> eligibleIndices = new ArrayList<>();
         for (int i = 0; i < 36; i++) {
             if (i == player.getInventory().selected) continue;
             ItemStack stack = player.getInventory().items.get(i);
-            if (stack.getEnchantmentLevel(chorusHolder) > 0 && player.getRandom().nextFloat() < 0.01f) {
+            if (getEnchantmentLevel(serverLevel, ModEnchantments.CHORUS,  stack) > 0 && player.getRandom().nextFloat() < 0.01f) {
                 eligibleIndices.add(i);
             }
         }
@@ -2271,17 +2068,13 @@ public class EnchantmentEventHandlers {
         if (player.level().isClientSide()) return;
         ServerLevel serverLevel = (ServerLevel) player.level();
 
-        Holder<Enchantment> enchantHolder = serverLevel.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.SPARKING);
-
         for (EquipmentSlot slot : new EquipmentSlot[]{
                 EquipmentSlot.HEAD, EquipmentSlot.CHEST,
                 EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
 
             ItemStack piece = player.getItemBySlot(slot);
             if (piece.isEmpty()) continue;
-            if (piece.getEnchantmentLevel(enchantHolder) <= 0) continue;
+            if (getEnchantmentLevel(serverLevel, ModEnchantments.SPARKING,  piece) <= 0) continue;
             if (player.getRandom().nextFloat() >= 0.005f) continue;
             BlockPos target = findTaggedBlockNearby(serverLevel, player.blockPosition(), 5, ModTags.Blocks.REDSTONE_TARGET);
             if (target == null) {
@@ -2340,17 +2133,13 @@ public class EnchantmentEventHandlers {
         if (player.level().isClientSide()) return;
         ServerLevel serverLevel = (ServerLevel) player.level();
 
-        Holder<Enchantment> blackThumbHolder = serverLevel.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.BLACK_THUMB);
-
         for (EquipmentSlot slot : new EquipmentSlot[]{
                 EquipmentSlot.HEAD, EquipmentSlot.CHEST,
                 EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
 
             ItemStack piece = player.getItemBySlot(slot);
             if (piece.isEmpty()) continue;
-            if (piece.getEnchantmentLevel(blackThumbHolder) <= 0) continue;
+            if (getEnchantmentLevel(serverLevel, ModEnchantments.BLACK_THUMB,  piece)  <= 0) continue;
             if (player.getRandom().nextFloat() >= 0.005f) continue;
 
             BlockPos target = findBlackThumbTarget(serverLevel, player.blockPosition(), 5);
@@ -2431,11 +2220,7 @@ public class EnchantmentEventHandlers {
 
         if (held.isEmpty()) return;
 
-        Holder<Enchantment> rubberBandHolder = serverLevel.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.RUBBER_BAND);
-
-        if (held.getEnchantmentLevel(rubberBandHolder) <= 0) return;
+        if (getEnchantmentLevel(serverLevel, ModEnchantments.RUBBER_BAND, held) <= 0) return;
         if(player.onGround()) return;
         if (player.getDeltaMovement().y >= 0) return;
         if (player.getRandom().nextFloat() >= 0.05f) return;
@@ -2497,11 +2282,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = event.getItemStack();
         if (stack.isEmpty()) return;
 
-        Holder<Enchantment> rubberBandHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
-
-        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        int echoLevel = getEnchantmentLevel(event.getEntity().level(), ModEnchantments.TIME_REMNANT, stack);
         if (echoLevel <= 0) return;
 
         savePosition(stack, player, echoLevel);
@@ -2516,11 +2297,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = player.getMainHandItem();
         if (stack.isEmpty()) return;
 
-        Holder<Enchantment> rubberBandHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
-
-        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        int echoLevel = getEnchantmentLevel(event.getEntity().level(), ModEnchantments.TIME_REMNANT, stack);
         if (echoLevel <= 0) return;
 
         spawnEchoGhosts(player, stack);
@@ -2533,11 +2310,7 @@ public class EnchantmentEventHandlers {
         ItemStack stack = player.getMainHandItem();
         if (stack.isEmpty()) return;
 
-        Holder<Enchantment> rubberBandHolder = player.level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
-
-        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        int echoLevel = getEnchantmentLevel(event.getEntity().level(), ModEnchantments.TIME_REMNANT, stack);
         if (echoLevel <= 0) return;
 
         spawnEchoGhosts(player, stack);
@@ -2599,11 +2372,7 @@ public class EnchantmentEventHandlers {
             ItemStack stack = player.getMainHandItem();
             if (stack.isEmpty()) continue;
 
-            Holder<Enchantment> rubberBandHolder = serverLevel.registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
-
-            int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+            int echoLevel = getEnchantmentLevel(serverLevel, ModEnchantments.TIME_REMNANT, stack);
             if (echoLevel <= 0) continue;
 
             ListTag positions = getPositionList(stack);
@@ -2696,11 +2465,7 @@ public class EnchantmentEventHandlers {
         if (stack.isEmpty()) return;
         if (event.getEntity() == null) return;
 
-        Holder<Enchantment> rubberBandHolder = event.getEntity().level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.TIME_REMNANT);
-
-        int echoLevel = stack.getEnchantmentLevel(rubberBandHolder);
+        int echoLevel = getEnchantmentLevel(event.getEntity().level(), ModEnchantments.TIME_REMNANT, stack);
         if (echoLevel <= 0) return;
 
         ListTag positions = getPositionList(stack);
@@ -2754,12 +2519,8 @@ public class EnchantmentEventHandlers {
         ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
         ItemStack boots  = player.getItemBySlot(EquipmentSlot.FEET);
 
-        Holder<Enchantment> rubberBandHolder = event.getEntity().level().registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(ModEnchantments.NEWTON);
-
-        int helmetLevel = helmet.getEnchantmentLevel(rubberBandHolder);
-        int bootsLevel = boots.getEnchantmentLevel(rubberBandHolder);
+        int helmetLevel = getEnchantmentLevel(level, ModEnchantments.NEWTON, helmet);
+        int bootsLevel = getEnchantmentLevel(level, ModEnchantments.NEWTON, boots);
 
         if (helmetLevel>0) tickHelmet(player, level);
         if (bootsLevel>0) tickBoots(player, level);
@@ -2803,6 +2564,14 @@ public class EnchantmentEventHandlers {
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         level.playSound(null, pos, BaseModSounds.EARTH_RUMBLE.get(), SoundSource.PLAYERS);
         FallingBlockEntity falling = FallingBlockEntity.fall(level, pos, state);
+    }
+
+    private static int getEnchantmentLevel(Level level, ResourceKey<Enchantment> enchantment, ItemStack item){
+        Holder<Enchantment> enchHolder = level.registryAccess()
+                .registryOrThrow(Registries.ENCHANTMENT)
+                .getHolderOrThrow(enchantment);
+
+        return item.getEnchantmentLevel(enchHolder);
     }
 
 }
