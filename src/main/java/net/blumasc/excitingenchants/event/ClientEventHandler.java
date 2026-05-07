@@ -2,6 +2,7 @@ package net.blumasc.excitingenchants.event;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.blumasc.blubasics.item.client.InWorld3dBakedModel;
 import net.blumasc.excitingenchants.ExcitingEnchantsMod;
@@ -15,6 +16,7 @@ import net.blumasc.excitingenchants.effect.ModEffects;
 import net.blumasc.excitingenchants.enchantment.ModEnchantments;
 import net.blumasc.excitingenchants.entity.client.castle.CastleRenderLayer;
 import net.blumasc.excitingenchants.entity.client.souls.SoulRetrieverRenderLayer;
+import net.blumasc.excitingenchants.entity.client.souls.SoulVertexConsumer;
 import net.blumasc.excitingenchants.item.ModItems;
 import net.blumasc.excitingenchants.network.InventoryOpenPayload;
 import net.blumasc.excitingenchants.network.JumpInputPacket;
@@ -378,14 +380,21 @@ public class ClientEventHandler {
             float yaw = (float) Math.toDegrees(Math.atan2(rx, rz));
             poseStack.mulPose(Axis.YP.rotationDegrees(yaw+180));
             poseStack.scale(0.2f, 0.2f, 0.2f);
-            RenderSystem.setShaderColor(0.0f, 0.8f, 0.9f, 1.0f);
+            MultiBufferSource tintedBuffer = renderType -> {
+                VertexConsumer base = bufferSource.getBuffer(renderType);
+                return new SoulVertexConsumer(base);
+            };
+
             dispatcher.render(
-                    dummy, 0, 0, 0, 0,
-                    event.getPartialTick().getGameTimeDeltaPartialTick(true),
-                    poseStack, bufferSource, 15728880
+                    dummy,
+                    0, 0, 0,
+                    0,
+                    partialTick,
+                    poseStack,
+                    tintedBuffer,
+                    15728880
             );
             ((MultiBufferSource.BufferSource) bufferSource).endBatch();
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 
 
