@@ -3,6 +3,7 @@ package net.blumasc.excitingenchants.entity.client.castle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.blumasc.blubasics.client.ClientEffectData;
 import net.blumasc.excitingenchants.ExcitingEnchantsMod;
 import net.blumasc.excitingenchants.effect.ModEffects;
 import net.minecraft.client.model.PlayerModel;
@@ -45,7 +46,8 @@ public class CastleRenderLayer<T extends Player> extends RenderLayer<T, PlayerMo
                        float partialTick, float ageInTicks,
                        float netHeadYaw, float headPitch) {
 
-        if (!player.hasEffect(ModEffects.CASTLE_MODE)) return;
+        if (!ClientEffectData.hasEffect(player.getUUID(), ModEffects.CASTLE_MODE.getKey().location()))
+            return;
 
         int effect = player.getEffect(ModEffects.CASTLE_MODE).getAmplifier();
 

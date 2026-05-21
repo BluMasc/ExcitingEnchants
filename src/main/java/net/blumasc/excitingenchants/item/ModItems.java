@@ -1,5 +1,6 @@
 package net.blumasc.excitingenchants.item;
 
+import net.blumasc.blubasics.compat.BarchedCompat;
 import net.blumasc.excitingenchants.ExcitingEnchantsMod;
 import net.blumasc.excitingenchants.block.ModBlocks;
 import net.blumasc.excitingenchants.item.custom.BidentItem;
@@ -74,20 +75,21 @@ public class ModItems {
             () -> new Item(new Item.Properties().food(ModFoodProperties.SUSPICIOUS_MEAT)));
 
     public static final DeferredItem<Item> HOTDOG = ITEMS.register("hot_dog",
-            () -> new Item(new Item.Properties().food(ModFoodProperties.HOT_DOG)){
+            () -> new Item(new Item.Properties().food(ModFoodProperties.HOT_DOG)) {
                 @Override
                 public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-                    tooltipComponents.add(Component.translatable(stack.getDescriptionId()+".tooltip").withStyle(ChatFormatting.GRAY));
+                    tooltipComponents.add(Component.translatable(stack.getDescriptionId() + ".tooltip").withStyle(ChatFormatting.GRAY));
                     super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
                 }
             });
 
     public static final DeferredItem<Item> OVERGROWN_SPEAR = ITEMS.register("overgrown_swordspear",
-            () -> new Item(new Item.Properties().stacksTo(1)){
+            () -> new Item(new Item.Properties().stacksTo(1)) {
                 @Override
                 public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
-                    if(usedHand != InteractionHand.MAIN_HAND) return super.use(level, player, usedHand);
-                    if(!(player.getOffhandItem().getItem() instanceof ShearsItem)) return super.use(level, player, usedHand);
+                    if (usedHand != InteractionHand.MAIN_HAND) return super.use(level, player, usedHand);
+                    if (!(player.getOffhandItem().getItem() instanceof ShearsItem))
+                        return super.use(level, player, usedHand);
                     ItemStack shears = player.getOffhandItem();
                     player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SHEEP_SHEAR, SoundSource.PLAYERS);
                     ItemStack kelp = new ItemStack(Items.KELP, player.getRandom().nextInt(3) + 1);
@@ -101,15 +103,15 @@ public class ModItems {
             });
 
     public static final DeferredItem<Item> RUSTED_SPEAR = ITEMS.register("rusted_swordspear",
-            () -> new Item(new Item.Properties().stacksTo(1)){
+            () -> new Item(new Item.Properties().stacksTo(1)) {
                 @Override
                 public InteractionResult useOn(UseOnContext context) {
                     BlockPos pos = context.getClickedPos();
                     Level l = context.getLevel();
-                    if(context.getPlayer() == null) return super.useOn(context);
-                    if(l.getBlockState(pos).is(Blocks.GRINDSTONE)){
+                    if (context.getPlayer() == null) return super.useOn(context);
+                    if (l.getBlockState(pos).is(Blocks.GRINDSTONE)) {
                         l.playSound(null, pos, SoundEvents.GRINDSTONE_USE, SoundSource.PLAYERS);
-                        if(l.random.nextInt(10)==0){
+                        if (l.random.nextInt(10) == 0) {
                             Player p = context.getPlayer();
                             p.setItemInHand(context.getHand(), new ItemStack(DULL_SPEAR.get()));
                             return InteractionResult.sidedSuccess(l.isClientSide());
@@ -173,7 +175,7 @@ public class ModItems {
             () -> new Item(new Item.Properties().stacksTo(1)));
 
     public static final DeferredItem<Item> REPAIRED_SPEAR = ITEMS.register("repaired_swordspear",
-            () -> new Item(new Item.Properties().stacksTo(1)){
+            () -> new Item(new Item.Properties().stacksTo(1)) {
                 @Override
                 public InteractionResult useOn(UseOnContext context) {
                     BlockPos pos = context.getClickedPos();
@@ -209,8 +211,28 @@ public class ModItems {
     public static final DeferredItem<Item> SPEAR_BLANK = ITEMS.register("swordspear_blank",
             () -> new Item(new Item.Properties().stacksTo(1)));
 
-    public static final DeferredItem<SwordItem> SWORDSPEAR = ITEMS.register("swordspear",
-            () -> new SwordItem(Tiers.DIAMOND, (new Item.Properties().attributes(SwordItem.createAttributes(Tiers.DIAMOND, 3, -2.4F)))));
+    public static final DeferredItem<Item> SWORDSPEAR = ITEMS.register("swordspear",
+            () -> {
+                if (BarchedCompat.isLoaded()) {
+                    Item.Properties props = new Item.Properties()
+                            .attributes(BarchedCompat.buildSpearAttributes(Tiers.NETHERITE, 3.0f, -2.4f));
+                    props = BarchedCompat.applySpearComponent(props, Tiers.DIAMOND,
+                            1.05F,  // swingSeconds
+                            1.075F, // kineticDamageMultiplier
+                            0.50F,  // delaySeconds
+                            3.0F,   // damageCondDurationSeconds
+                            7.5F,   // damageCondMinSpeed
+                            6.5F,   // knockbackCondDurationSeconds
+                            5.1F,   // knockbackCondMinSpeed
+                            10.0F,  // dismountCondDurationSeconds
+                            4.6F    // dismountCondMinRelativeSpeed
+                    );
+                    return new SwordItem(Tiers.DIAMOND, props);
+                } else {
+                    return new SwordItem(Tiers.DIAMOND, new Item.Properties()
+                            .attributes(SwordItem.createAttributes(Tiers.DIAMOND, 3, -2.4f)));
+                }
+            });
 
     public static final DeferredItem<BidentItem> BIDENT = ITEMS.register("bident",
             () -> new BidentItem(new Item.Properties().durability(32)));
@@ -219,7 +241,7 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
 
 
-    public static void register(IEventBus eventBus){
+    public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
     }
 }

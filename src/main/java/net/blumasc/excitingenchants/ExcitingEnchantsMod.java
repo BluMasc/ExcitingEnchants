@@ -1,5 +1,6 @@
 package net.blumasc.excitingenchants;
 
+import net.blumasc.blubasics.events.RenderEffectSyncRegistry;
 import net.blumasc.excitingenchants.block.ModBlocks;
 import net.blumasc.excitingenchants.block.entity.ModBlockEntities;
 import net.blumasc.excitingenchants.effect.ModEffects;
@@ -13,6 +14,7 @@ import net.blumasc.excitingenchants.network.ModNetworking;
 import net.blumasc.excitingenchants.particle.ModParticles;
 import net.blumasc.excitingenchants.sound.ModSounds;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -49,6 +51,9 @@ public class ExcitingEnchantsMod {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            RenderEffectSyncRegistry.register( BuiltInRegistries.MOB_EFFECT.getKey(ModEffects.CASTLE_MODE.value()));
+        });
     }
 
     @SubscribeEvent

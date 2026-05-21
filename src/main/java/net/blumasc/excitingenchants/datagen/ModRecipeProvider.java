@@ -91,9 +91,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
         stonecutting(recipeOutput, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GOLDEN_BRICK_SLAB, ModBlocks.GOLDEN_BLOCK, 2);
 
-        SmithingTransformRecipeBuilder.smithing(Ingredient.of(new ItemLike[]{Items.RED_WOOL}), Ingredient.of(new ItemLike[]{ModItems.SPEAR_BLANK}), Ingredient.of(new ItemLike[]{Items.GOLD_INGOT}), RecipeCategory.TOOLS, ModItems.SWORDSPEAR.get()).unlocks("has_spear_blank", has(ModItems.SPEAR_BLANK)).save(recipeOutput.withConditions(
-                new NotCondition(new ModLoadedCondition("spears"))
-        ), ExcitingEnchantsMod.MODID + ":spear_smithing");
+        SmithingTransformRecipeBuilder.smithing(Ingredient.of(new ItemLike[]{Items.RED_WOOL}), Ingredient.of(new ItemLike[]{ModItems.SPEAR_BLANK}), Ingredient.of(new ItemLike[]{Items.GOLD_INGOT}), RecipeCategory.TOOLS, ModItems.SWORDSPEAR.get()).unlocks("has_spear_blank", has(ModItems.SPEAR_BLANK)).save(recipeOutput, ExcitingEnchantsMod.MODID + ":spear_smithing");
         oreSmelting(recipeOutput, Collections.singletonList(ModItems.DULL_SPEAR), RecipeCategory.COMBAT, ModItems.SUPERHEATED_SPEAR, 0.25f, 200, "superheating_spear");
         foodSmelting(recipeOutput, Collections.singletonList(ModItems.RAW_CARP), RecipeCategory.FOOD, ModItems.COOKED_CARP, 0.25f, 200, "cooking_carp");
         foodSmelting(recipeOutput, Collections.singletonList(ModItems.GOLDEN_MEAT), RecipeCategory.FOOD, ModItems.COOKED_GOLDEN_MEAT, 0.25f, 200, "cooking_golden_meat");

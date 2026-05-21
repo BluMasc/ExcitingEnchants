@@ -68,6 +68,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.*;
 import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
@@ -2045,16 +2046,20 @@ public class EnchantmentEventHandlers {
 
         int toIndex = swapTargets.get(player.getRandom().nextInt(swapTargets.size()));
 
-        ItemStack a = player.getInventory().items.get(fromIndex);
-        ItemStack b = player.getInventory().items.get(toIndex);
+        Inventory inv = player.getInventory();
 
-        player.getInventory().items.set(fromIndex, b);
-        player.getInventory().items.set(toIndex, a);
+        ItemStack a = inv.getItem(fromIndex).copy();
+        ItemStack b = inv.getItem(toIndex).copy();
+
+        inv.setItem(fromIndex, b);
+        inv.setItem(toIndex, a);
+
 
         serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.PLAYERS, 1.0f, 1.0f);
 
-        sp.inventoryMenu.sendAllDataToRemote();
+        inv.setChanged();
+        sp.containerMenu.broadcastChanges();
     }
 
     @SubscribeEvent
